@@ -1193,6 +1193,7 @@ fun CaloriesBar(
     }
 }
 
+
 @Composable
 fun DayCircle(
     dayName: String,
