@@ -38,5 +38,6 @@ val activityGreenEnd = Color(169, 225, 95, 255)
 val activityBlueStart = Color(0, 188, 222)
 val activityBlueEnd = Color(114, 236, 218, 255)
 
-
 val colorError = Color(209, 46, 36)
+
+val ringColor = Color(191, 236, 32)

@@ -1,12 +1,16 @@
 package com.example.sporthub.ui.screen.home
 
+import android.Manifest.permission.ACTIVITY_RECOGNITION
+import android.Manifest.permission.POST_NOTIFICATIONS
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -26,7 +30,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -36,7 +39,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
@@ -49,8 +51,6 @@ import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.WineBar
-import androidx.compose.material.icons.outlined.LocalFireDepartment
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -68,37 +68,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.health.connect.client.PermissionController
-import androidx.health.connect.client.units.Energy
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.sporthub.data.healthconnect.HealthState
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.LightGray
 import com.example.sporthub.ui.theme.LightPurple
 import com.example.sporthub.ui.theme.OffWhite
-import com.example.sporthub.ui.theme.Pink40
 import com.example.sporthub.ui.theme.activityBlueEnd
 import com.example.sporthub.ui.theme.activityBlueStart
 import com.example.sporthub.ui.theme.activityGreenEnd
 import com.example.sporthub.ui.theme.activityGreenStart
 import com.example.sporthub.ui.theme.activityRedEnd
 import com.example.sporthub.ui.theme.activityRedStart
-import com.example.sporthub.ui.theme.appleBlue
 import com.example.sporthub.ui.theme.appleOrange
 import com.example.sporthub.ui.theme.applePink
 import com.example.sporthub.ui.theme.black
@@ -107,6 +100,7 @@ import com.example.sporthub.ui.theme.googleRed
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.HomeViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.example.sporthub.ui.viewmodel.TimerViewModel
 import com.himanshoe.charty.circle.CircleChart
 import com.himanshoe.charty.circle.model.CircleData
 import com.himanshoe.charty.common.asGradientChartColor
@@ -121,9 +115,6 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.apply
-import kotlin.collections.listOf
-import kotlin.io.path.Path
 import kotlin.math.sin
 
 @Composable
@@ -131,6 +122,7 @@ fun HomeScreen(
     navController: NavController,
     loginViewModel: LoginViewModel,
     homeViewModel: HomeViewModel,
+    timerViewModel: TimerViewModel,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -145,7 +137,30 @@ fun HomeScreen(
         }
     }
 
+    val activityPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { isGranted ->
+        if(isGranted.containsValue(true)) {
+            homeViewModel.fetchData()
+        }
+    }
+
     LaunchedEffect(Unit) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val check = ContextCompat.checkSelfPermission(
+                context,
+                POST_NOTIFICATIONS
+            )
+            if(check != PackageManager.PERMISSION_GRANTED) {
+                activityPermissionLauncher.launch(
+                    arrayOf(
+                        ACTIVITY_RECOGNITION,
+                        POST_NOTIFICATIONS
+                    )
+                )
+            }
+        }
+
         if (healthState.checkPermissions()) {
             homeViewModel.fetchData()
             homeViewModel.strikeDay()
@@ -168,6 +183,8 @@ fun HomeScreen(
     val oxygen by homeViewModel.oxygen.collectAsState()
     val water by homeViewModel.water.collectAsState()
 
+    val secondsLeft by timerViewModel.timerLeft.collectAsStateWithLifecycle()
+
     val calories by homeViewModel.calories.collectAsState()
     val caloriesGoal = 1000f
     val currentProgress = (calories.inKilocalories.toFloat() / caloriesGoal).coerceIn(0f, 1f)
@@ -185,8 +202,8 @@ fun HomeScreen(
             )
             .verticalScroll(scrollState)
             .padding(horizontal = 20.dp)
+            .statusBarsPadding()
     ) {
-        Spacer(Modifier.statusBarsPadding())
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -249,6 +266,32 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                if(secondsLeft > 0) {
+                    Box(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .width(60.dp)
+                            .shadow(
+                                elevation = 8.dp,
+                                shape = RoundedCornerShape(16.dp),
+                                ambientColor = Color.Black.copy(alpha = 0.1f),
+                                spotColor = Color.Black.copy(alpha = 0.3f)
+                            )
+                            .background(color = Color.White, shape = RoundedCornerShape(16.dp))
+                            .clickable(
+                                onClick = { navController.navigate("timer_screen") },
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = timerViewModel.formatTime(secondsLeft),
+                            color = black,
+                            fontSize = 14.sp,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                }
                 Row(
                     modifier = Modifier
                         .height(40.dp)
@@ -868,16 +911,17 @@ fun HomeScreen(
         Spacer(
             modifier = Modifier
                 .navigationBarsPadding()
-                .height(114.dp)
+                .height(120.dp)
         )
     }
 }
 
 @Composable
-fun Glass(
+fun HomeGlassBottomBar(
     navController: NavController,
     loginViewModel: LoginViewModel,
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel,
+    timerViewModel: TimerViewModel
 ) {
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
@@ -892,13 +936,14 @@ fun Glass(
             navController,
             loginViewModel,
             homeViewModel,
+            timerViewModel,
             modifier = Modifier.layerBackdrop(backdrop)
         )
 
         Row(
             modifier = Modifier
                 .navigationBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 24.dp)
+                .padding(horizontal = 20.dp, vertical = 12.dp)
                 .height(70.dp)
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
@@ -951,7 +996,9 @@ fun Glass(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .clickable(onClick = { }),
+                        .clickable(onClick = {
+                            navController.navigate("timer_screen")
+                        }),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {

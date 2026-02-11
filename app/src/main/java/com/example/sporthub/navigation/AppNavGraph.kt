@@ -1,7 +1,5 @@
 package com.example.sporthub.navigation
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,7 +18,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.sporthub.ui.screen.home.AccountScreen
-import com.example.sporthub.ui.screen.home.Glass
+import com.example.sporthub.ui.screen.home.HomeGlassBottomBar
+import com.example.sporthub.ui.screen.home.TimerGlassBottomBar
 import com.example.sporthub.ui.screen.login.DetailsScreen
 import com.example.sporthub.ui.screen.login.LevelScreen
 import com.example.sporthub.ui.screen.login.SignInScreen
@@ -30,12 +29,14 @@ import com.example.sporthub.ui.screen.login.StartScreen
 import com.example.sporthub.ui.screen.login.WelcomeScreen
 import com.example.sporthub.ui.viewmodel.HomeViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.example.sporthub.ui.viewmodel.TimerViewModel
 
 @Composable
 fun AppNavGraph(
     navController: NavHostController,
     loginViewModel: LoginViewModel,
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel,
+    timerViewModel: TimerViewModel
 ) {
     var startDestination by remember { mutableStateOf<String?>(null) }
 
@@ -113,10 +114,11 @@ fun AppNavGraph(
             }
 
             composable(route = "home_screen") {
-                Glass(
+                HomeGlassBottomBar(
                     navController = navController,
                     loginViewModel,
-                    homeViewModel
+                    homeViewModel,
+                    timerViewModel
                 )
             }
 
@@ -124,6 +126,13 @@ fun AppNavGraph(
                 AccountScreen(
                     navController = navController,
                     loginViewModel
+                )
+            }
+
+            composable(route = "timer_screen") {
+                TimerGlassBottomBar(
+                    navController = navController,
+                    timerViewModel
                 )
             }
         }

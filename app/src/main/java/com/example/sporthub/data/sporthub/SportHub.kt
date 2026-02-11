@@ -1,7 +1,6 @@
 package com.example.sporthub.data.sporthub
 
 import androidx.annotation.Keep
-import androidx.health.connect.client.units.Energy
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 

@@ -54,9 +54,7 @@ android {
 
 dependencies {
 
-
     implementation("androidx.health.connect:connect-client:1.1.0")
-
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     implementation("androidx.room:room-runtime:2.8.4")
@@ -74,6 +72,7 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.8.9")
 
+    implementation("com.github.zj565061763:compose-wheel-picker:1.0.0-beta02")
     implementation("io.github.kyant0:backdrop:1.0.5")
     implementation("com.himanshoe:charty:2.1.0-beta03.4")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")

@@ -39,8 +39,10 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -82,7 +84,7 @@ fun DetailsScreen(
             heightState.value.isNotBlank() &&
             birthdateState.value.isNotBlank()
 
-    val openDialog = remember { mutableStateOf(false) }
+    var openDialog by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
     val focusManager = LocalFocusManager.current
@@ -283,7 +285,7 @@ fun DetailsScreen(
                 .fillMaxWidth()
                 .clickable {
                     focusManager.clearFocus()
-                    openDialog.value = true
+                    openDialog = true
                 },
             textStyle = MaterialTheme.typography.titleLarge.copy(
                 fontSize = 24.sp,
@@ -377,9 +379,9 @@ fun DetailsScreen(
                 )
             }
 
-            if (openDialog.value) {
+            if (openDialog) {
                 DatePickerDialog(
-                    onDismissRequest = { openDialog.value = false },
+                    onDismissRequest = { openDialog = false },
                     confirmButton = {
                         TextButton(onClick = {
                             val selectedDate = datePickerState.selectedDateMillis
@@ -387,13 +389,13 @@ fun DetailsScreen(
                                 val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
                                 birthdateState.value = sdf.format(Date(selectedDate))
                             }
-                            openDialog.value = false
+                            openDialog = false
                         }) {
                             Text("OK", color = black, fontWeight = FontWeight.Bold)
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { openDialog.value = false }) {
+                        TextButton(onClick = { openDialog = false }) {
                             Text("Cancel", color = black, fontWeight = FontWeight.Bold)
                         }
                     },
