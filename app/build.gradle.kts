@@ -72,6 +72,7 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.8.9")
 
+    implementation(files("libs/KetchumSDK_Community_20250805.jar"))
     implementation("com.github.zj565061763:compose-wheel-picker:1.0.0-beta02")
     implementation("io.github.kyant0:backdrop:1.0.5")
     implementation("com.himanshoe:charty:2.1.0-beta03.4")
