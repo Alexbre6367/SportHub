@@ -28,7 +28,7 @@ class SportHubRepository(private val sportHubDao: SportHubDao, private val healt
         sportHubDao.deleteUser(user)
     }
 
-    suspend fun saveHealth(steps: Long, sleep: Long, heart: Int, oxygen: Int, water: Int, calories: Energy) {
+    suspend fun saveHealth(steps: Long, sleep: Long, heart: Int, oxygen: Int, water: Int, calories: Energy, caloriesStrike: Int) {
         val calendar = Calendar.getInstance()
         val dateId = (calendar.get(Calendar.YEAR) * 10000 + (calendar.get(Calendar.MONTH) + 1) * 100 + calendar.get(Calendar.DAY_OF_MONTH)).toLong()
         healthDao.insertHealthData(
@@ -39,25 +39,30 @@ class SportHubRepository(private val sportHubDao: SportHubDao, private val healt
                 sleep = sleep,
                 oxygen = oxygen,
                 water = water,
-                calories = calories.inKilocalories.toInt()
+                calories = calories.inKilocalories.toInt(),
+                caloriesStrike = caloriesStrike
             )
         )
     }
 
-    suspend fun clearHealthDatabase(preference: SharedPreferences) {
+    suspend fun deleteAllHealthData(preference: SharedPreferences) {
         val calendar = Calendar.getInstance()
         if(calendar.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY) {
             val todayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
             val lastUpdateDay = preference.getInt("lastUpdateDay", -1)
 
             if(lastUpdateDay != todayOfYear) {
-                healthDao.clearAllHealthData()
+                healthDao.deleteAllHealthData()
                 preference.edit { putInt("lastUpdateDay", todayOfYear) }
             }
         }
     }
 
-    fun getHealthForToday(): Flow<HealthEntity?> {
-        return healthDao.getLastHealthData()
+    fun getHealthForToday(dateId: Long): Flow<HealthEntity?> {
+        return healthDao.getLastHealthData(dateId)
+    }
+
+    fun getHealthForWeek(startWeek: Long, endWeek: Long): Flow<List<HealthEntity>> {
+        return healthDao.getHealthWeek(startWeek, endWeek)
     }
 }

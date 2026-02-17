@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [User::class, HealthEntity::class],  version = 15, exportSchema = false)
+@Database(entities = [User::class, HealthEntity::class],  version = 17, exportSchema = false)
 abstract class SportHubDatabase: RoomDatabase() {
 
     abstract val sportHubDao: SportHubDao
@@ -21,6 +21,7 @@ abstract class SportHubDatabase: RoomDatabase() {
                     SportHubDatabase::class.java,
                     "sporthub_database"
                 )
+                    .fallbackToDestructiveMigration()
                     .build()
                     .also { INSTANCE = it }
             }

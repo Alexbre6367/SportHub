@@ -44,11 +44,11 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Opacity
-import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.WineBar
 import androidx.compose.material3.Icon
@@ -74,6 +74,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,7 +82,7 @@ import androidx.core.content.ContextCompat
 import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.sporthub.data.healthconnect.HealthState
+import com.example.sporthub.data.health.HealthState
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.LightGray
 import com.example.sporthub.ui.theme.LightPurple
@@ -128,7 +129,6 @@ fun HomeScreen(
     val context = LocalContext.current
     val healthState = remember { HealthState(context) }
 
-
     val permissionLauncher = rememberLauncherForActivityResult(
         PermissionController.createRequestPermissionResultContract()
     ) { granted ->
@@ -163,32 +163,24 @@ fun HomeScreen(
 
         if (healthState.checkPermissions()) {
             homeViewModel.fetchData()
-            homeViewModel.strikeDay()
         } else {
             permissionLauncher.launch(healthState.permissions)
         }
     }
 
-
-    val currentDate = remember {
-        val formatter = SimpleDateFormat("d MMMM", Locale.ENGLISH)
-        formatter.format(Date())
-    }
-
-    val loadedBitmap by loginViewModel.loadedBitmap.collectAsState()
-    val userData by loginViewModel.currentUser.collectAsState()
     val step by homeViewModel.steps.collectAsState()
     val sleep by homeViewModel.formatSleep.collectAsState()
     val heart by homeViewModel.heart.collectAsState()
     val oxygen by homeViewModel.oxygen.collectAsState()
     val water by homeViewModel.water.collectAsState()
+    val caloriesStrike by homeViewModel.caloriesStrike.collectAsState()
 
-    val secondsLeft by timerViewModel.timerLeft.collectAsStateWithLifecycle()
+    val weekProgress by homeViewModel.week.collectAsState()
+    val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
     val calories by homeViewModel.calories.collectAsState()
     val caloriesGoal = 1000f
     val currentProgress = (calories.inKilocalories.toFloat() / caloriesGoal).coerceIn(0f, 1f)
-
 
     val scrollState = rememberScrollState()
 
@@ -204,154 +196,11 @@ fun HomeScreen(
             .padding(horizontal = 20.dp)
             .statusBarsPadding()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier
-                    .width(200.dp)
-                    .height(50.dp)
-                    .clickable(
-                        onClick = { navController.navigate("account_screen") },
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier.size(40.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (loadedBitmap != null) {
-                        Image(
-                            bitmap = loadedBitmap!!.asImageBitmap(),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape),
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                        )
-                    } else {
-                        Icon(
-                            Icons.Default.AccountCircle,
-                            contentDescription = null,
-                            tint = black,
-                            modifier = Modifier.size(36.dp)
-                        )
-                    }
-                }
-                Spacer(Modifier.width(8.dp))
-                Column(verticalArrangement = Arrangement.Center) {
-                    Text(
-                        text = "Today, $currentDate",
-                        color = LightGray,
-                        fontSize = 12.sp,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                    Text(
-                        text = if (userData?.name != null) {
-                            "Welcome Back, ${userData?.name}"
-                        } else {
-                            "Welcome Back"
-                        },
-                        color = gray,
-                        fontSize = 14.sp,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-            }
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if(secondsLeft > 0) {
-                    Box(
-                        modifier = Modifier
-                            .height(40.dp)
-                            .width(60.dp)
-                            .shadow(
-                                elevation = 8.dp,
-                                shape = RoundedCornerShape(16.dp),
-                                ambientColor = Color.Black.copy(alpha = 0.1f),
-                                spotColor = Color.Black.copy(alpha = 0.3f)
-                            )
-                            .background(color = Color.White, shape = RoundedCornerShape(16.dp))
-                            .clickable(
-                                onClick = { navController.navigate("timer_screen") },
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = timerViewModel.formatTime(secondsLeft),
-                            color = black,
-                            fontSize = 14.sp,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    }
-                }
-                Row(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .width(60.dp)
-                        .shadow(
-                            elevation = 8.dp,
-                            shape = RoundedCornerShape(16.dp),
-                            ambientColor = Color.Black.copy(alpha = 0.1f),
-                            spotColor = Color.Black.copy(alpha = 0.3f)
-                        )
-                        .background(color = Color.White, shape = RoundedCornerShape(16.dp))
-                        .clickable(
-                            onClick = { },
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        Icons.Default.LocalFireDepartment,
-                        contentDescription = null,
-                        tint = googleRed,
-                        modifier = Modifier.size(22.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = (userData?.strike ?: 0).toString(),
-                        color = black,
-                        fontSize = 14.sp,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .width(40.dp)
-                        .shadow(
-                            elevation = 8.dp,
-                            shape = RoundedCornerShape(16.dp),
-                            ambientColor = Color.Black.copy(alpha = 0.1f),
-                            spotColor = Color.Black.copy(alpha = 0.3f)
-                        )
-                        .background(color = Color.Black, shape = RoundedCornerShape(16.dp))
-                        .clickable(
-                            onClick = { },
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-        }
+        HomeTopAppBa(
+            navController,
+            loginViewModel,
+            timerViewModel
+        )
 
         Spacer(Modifier.height(14.dp))
         Column (
@@ -845,7 +694,7 @@ fun HomeScreen(
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = "3 days",
+                    text = caloriesStrike.toString(),
                     fontSize = 24.sp,
                     color = black,
                     style = MaterialTheme.typography.titleLarge,
@@ -890,18 +739,16 @@ fun HomeScreen(
                     homeViewModel = homeViewModel
                 )
                 Spacer(Modifier.height(16.dp))
-                val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-                val activeDaysCount = 3
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    days.forEachIndexed { index, day ->
-                        DayCircle(
-                            dayName = day,
-                            isActive = index < activeDaysCount
+                    days.forEachIndexed { index, dayLetter ->
+                        val isDayActive = weekProgress.getOrElse(index) { false }
+                        Week(
+                            days = dayLetter,
+                            isActive = isDayActive,
                         )
                     }
                 }
@@ -913,6 +760,173 @@ fun HomeScreen(
                 .navigationBarsPadding()
                 .height(120.dp)
         )
+    }
+}
+@Composable
+fun HomeTopAppBa(
+    navController: NavController,
+    loginViewModel: LoginViewModel,
+    timerViewModel: TimerViewModel
+) {
+
+    val currentDate = remember {
+        val formatter = SimpleDateFormat("d MMMM", Locale.ENGLISH)
+        formatter.format(Date())
+    }
+
+    val loadedBitmap by loginViewModel.loadedBitmap.collectAsState()
+    val userData by loginViewModel.currentUser.collectAsState()
+
+    val secondsLeft by timerViewModel.timerLeft.collectAsStateWithLifecycle()
+
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier
+                .width(200.dp)
+                .height(50.dp)
+                .clickable(
+                    onClick = { navController.navigate("account_screen") },
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier.size(40.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (loadedBitmap != null) {
+                    Image(
+                        bitmap = loadedBitmap!!.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.AccountCircle,
+                        contentDescription = null,
+                        tint = black,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+            }
+            Spacer(Modifier.width(8.dp))
+            Column(verticalArrangement = Arrangement.Center) {
+                Text(
+                    text = "Today, $currentDate",
+                    color = LightGray,
+                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Text(
+                    text = if (userData?.name != null) {
+                        "Welcome Back, ${userData?.name}"
+                    } else {
+                        "Welcome Back"
+                    },
+                    color = gray,
+                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if(secondsLeft > 0) {
+                Box(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .width(60.dp)
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = RoundedCornerShape(16.dp),
+                            ambientColor = Color.Black.copy(alpha = 0.1f),
+                            spotColor = Color.Black.copy(alpha = 0.3f)
+                        )
+                        .background(color = Color.White, shape = RoundedCornerShape(16.dp))
+                        .clickable(
+                            onClick = { navController.navigate("timer_screen") },
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = timerViewModel.formatTime(secondsLeft),
+                        color = black,
+                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .height(40.dp)
+                    .width(60.dp)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        ambientColor = Color.Black.copy(alpha = 0.1f),
+                        spotColor = Color.Black.copy(alpha = 0.3f)
+                    )
+                    .background(color = Color.White, shape = RoundedCornerShape(16.dp))
+                    .clickable(
+                        onClick = { },
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    Icons.Default.LocalFireDepartment,
+                    contentDescription = null,
+                    tint = googleRed,
+                    modifier = Modifier.size(22.dp)
+                )
+
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = (userData?.strike ?: 0).toString(),
+                    color = black,
+                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .height(40.dp)
+                    .width(40.dp)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        ambientColor = Color.Black.copy(alpha = 0.1f),
+                        spotColor = Color.Black.copy(alpha = 0.3f)
+                    )
+                    .background(color = Color.Black, shape = RoundedCornerShape(16.dp))
+                    .clickable(
+                        onClick = { },
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        }
     }
 }
 
@@ -1034,7 +1048,7 @@ fun HomeGlassBottomBar(
                 verticalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    Icons.Default.PhotoCamera,
+                    Icons.Default.FitnessCenter,
                     contentDescription = null,
                     tint = LightGray,
                     modifier = Modifier.size(24.dp)
@@ -1240,11 +1254,10 @@ fun CaloriesBar(
     }
 }
 
-
 @Composable
-fun DayCircle(
-    dayName: String,
-    isActive: Boolean
+fun Week(
+    days: String,
+    isActive: Boolean,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1276,7 +1289,7 @@ fun DayCircle(
             }
         }
         Text(
-            text = dayName,
+            text = days,
             color = LightGray,
             fontSize = 12.sp,
             style = MaterialTheme.typography.titleLarge,

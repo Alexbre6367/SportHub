@@ -28,5 +28,5 @@ data class HealthEntity(
     val oxygen: Int?,
     val water: Int?,
     val calories: Int?,
-    val timestamp: Long = System.currentTimeMillis()
+    val caloriesStrike: Int?,
 )

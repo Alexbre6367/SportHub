@@ -28,9 +28,12 @@ interface HealthDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHealthData(healthData: HealthEntity)
 
-    @Query("SELECT * FROM health_table ORDER BY timestamp DESC LIMIT 1")
-    fun getLastHealthData(): Flow<HealthEntity?>
+    @Query("SELECT * FROM health_table WHERE dateId = :dateId")
+    fun getLastHealthData(dateId: Long): Flow<HealthEntity?>
+
+    @Query("SELECT * FROM health_table WHERE dateId >= :startWeek AND dateId <= :endWeek")
+    fun getHealthWeek(startWeek: Long, endWeek: Long): Flow<List<HealthEntity>>
 
     @Query("DELETE FROM health_table")
-    suspend fun clearAllHealthData()
+    suspend fun deleteAllHealthData()
 }

@@ -1,4 +1,4 @@
-package com.example.sporthub.data.healthconnect
+package com.example.sporthub.data.health
 
 import android.content.Context
 import android.util.Log

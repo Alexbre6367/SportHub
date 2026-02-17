@@ -8,7 +8,7 @@ import androidx.core.content.edit
 import androidx.health.connect.client.units.Energy
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.sporthub.data.healthconnect.HealthState
+import com.example.sporthub.data.health.HealthState
 import com.example.sporthub.data.repository.SportHubRepository
 import com.example.sporthub.data.sporthub.SportHubDatabase
 import com.example.sporthub.util.SecureStorage
@@ -28,6 +28,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val healthState = HealthState(application)
 
     private val secureStorage = SecureStorage.getInstance(application)
+
+    val calendar: Calendar = Calendar.getInstance()
+    val dateId = (calendar.get(android.icu.util.Calendar.YEAR) * 10000 + (calendar.get(android.icu.util.Calendar.MONTH) + 1) * 100 + calendar.get(android.icu.util.Calendar.DAY_OF_MONTH)).toLong()
 
     private val _steps = MutableStateFlow(0L)
     val steps = _steps.asStateFlow()
@@ -50,6 +53,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     var firstLaunchAnimationCircle = false
     var firstLaunchAnimationCalories = false
 
+    private val _caloriesStrike = MutableStateFlow(0)
+    val caloriesStrike = _caloriesStrike.asStateFlow()
+
+    private val _week = MutableStateFlow(List(7) { false })
+    val week = _week.asStateFlow()
+
+
     @SuppressLint("DefaultLocale")
     val formatSleep = _sleep.map { totalSleep ->
         val hours = totalSleep / 60
@@ -58,19 +68,35 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "00:00")
 
     init {
+        resetWater()
+        caloriesStrike()
+
         viewModelScope.launch {
-            repository.getHealthForToday().collect { health ->
-                health?.let {
-                    _steps.value = it.steps
-                    _sleep.value = it.sleep ?: 0L
-                    _heart.value = it.heart?.toLong() ?: 0L
-                    _oxygen.value = it.oxygen ?: 0
-                    _water.value = it.water ?: 0
-                    _calories.value = Energy.kilocalories(it.calories?.toDouble() ?: 0.0)
+            repository.getHealthForToday(dateId).collect { health ->
+                if(health != null) {
+                    _steps.value = health.steps
+                    _sleep.value = health.sleep ?: 0L
+                    _heart.value = health.heart?.toLong() ?: 0L
+                    _oxygen.value = health.oxygen ?: 0
+                    _water.value = health.water ?: 0
+                    _calories.value = Energy.kilocalories(health.calories?.toDouble() ?: 0.0)
+                    _caloriesStrike.value = health.caloriesStrike ?: 0
                 }
             }
         }
         startHeartUpdates()
+    }
+
+    private suspend fun saveCurrentHealth() {
+        repository.saveHealth(
+            steps = _steps.value,
+            sleep = _sleep.value,
+            heart = _heart.value.toInt(),
+            oxygen = _oxygen.value,
+            water = _water.value,
+            calories = _calories.value,
+            caloriesStrike = _caloriesStrike.value
+        )
     }
 
     fun fetchData() {
@@ -87,21 +113,18 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     val currentOxygen = healthState.readOxygenToday()
                     val currentCalories = healthState.readCalories(currentSteps, weight)
 
-                    repository.saveHealth(
-                        steps = currentSteps,
-                        sleep = currentSleep,
-                        heart = currentHeart.toInt(),
-                        oxygen = currentOxygen,
-                        water = _water.value,
-                        calories = currentCalories
-                    )
-                    Log.d("MyLog", "Показатели здоровья сохранены в базу")
+                    _steps.value = currentSteps
+                    _sleep.value = currentSleep
+                    _heart.value = currentHeart
+                    _oxygen.value = currentOxygen
+                    _calories.value = currentCalories
 
-                    Log.d("MyLog", "Шаги получены: ${steps.value}")
-                    Log.d("MyLog", "Сон получен: ${sleep.value}")
-                    Log.d("MyLog", "Пульс получен: ${heart.value}")
-                    Log.d("MyLog", "Кислород получен: ${oxygen.value}")
-                    Log.d("MyLog", "Калории получены: ${calories.value}")
+                    saveCurrentHealth()
+                    strikeDay()
+                    caloriesStrike()
+
+                    Log.d("MyLog", "Показатели здоровья сохранены в базу")
+                    Log.d("MyCaloriesStrike", "Калории получены: ${calories.value}")
                 } else {
                     Log.e("MyLog", "Разрешение не предоставлено")
                 }
@@ -158,20 +181,68 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addWater() {
         viewModelScope.launch {
-            if(_water.value < 10) {
+            if (_water.value < 10) {
                 _water.value += 1
-                repository.saveHealth(
-                    steps = _steps.value,
-                    sleep = _sleep.value,
-                    heart = _heart.value.toInt(),
-                    oxygen = _oxygen.value,
-                    water = _water.value,
-                    calories = _calories.value
-                )
+                saveCurrentHealth()
                 Log.d("MyLog", "Вода увеличена: ${_water.value}")
             } else {
                 Log.d("MyLog", "Достигнут предел воды 10 стаканов")
             }
         }
+    }
+
+    private fun resetWater() {
+        viewModelScope.launch {
+            val prefs = getApplication<Application>().getSharedPreferences(
+                "daily_reset_prefs",
+                MODE_PRIVATE
+            )
+            val lastResetDate = prefs.getLong("last_reset_date", 0)
+
+            val calendar = Calendar.getInstance()
+            val today = (calendar.get(Calendar.YEAR) * 10000 +
+                    (calendar.get(Calendar.MONTH) + 1) * 100 +
+                    calendar.get(Calendar.DAY_OF_MONTH)).toLong()
+
+            if (lastResetDate < today) {
+                _water.value = 0
+                prefs.edit { putLong("last_reset_date", today) }
+                saveCurrentHealth()
+                Log.d("MyLog", "Вода успешно сброшена")
+            }
+        }
+    }
+
+    private fun caloriesStrike() {
+        viewModelScope.launch {
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            val startOfWeek = getDayId(calendar)
+
+            calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+            val endOfWeek = getDayId(calendar)
+
+            repository.getHealthForWeek(startOfWeek, endOfWeek).collect { entities ->
+                val progress = MutableList(7) { false }
+                val map = entities.associateBy { it.dateId }
+                val tempCalendar = Calendar.getInstance()
+                tempCalendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+
+                for (i in 0..6) {
+                    val currentId = getDayId(tempCalendar)
+                    val health = map[currentId]
+
+                    progress[i] = (health?.calories ?: 0) >= 1000
+                    tempCalendar.add(Calendar.DAY_OF_WEEK, 1)
+                }
+                _week.value = progress
+            }
+        }
+    }
+
+    private fun getDayId(cal: Calendar): Long {
+        return (cal.get(Calendar.YEAR) * 10000 +
+                (cal.get(Calendar.MONTH) + 1) * 100 +
+                cal.get(Calendar.DAY_OF_MONTH)).toLong()
     }
 }
