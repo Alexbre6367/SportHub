@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,14 +54,11 @@ import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.LoginViewModel
-import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 
 @Composable
 fun DeleteAccountScreen(

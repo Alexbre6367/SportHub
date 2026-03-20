@@ -1,9 +1,7 @@
 package com.example.sporthub.data.repository
 
-import android.content.SharedPreferences
 import android.icu.util.Calendar
 import android.util.Log
-import androidx.core.content.edit
 import androidx.health.connect.client.units.Energy
 import com.example.sporthub.data.sporthub.ExerciseEntity
 import com.example.sporthub.data.sporthub.HealthDao
@@ -13,7 +11,6 @@ import com.example.sporthub.data.sporthub.User
 import com.example.sporthub.data.sporthub.WorkoutDao
 import com.example.sporthub.data.sporthub.WorkoutEntity
 import com.example.sporthub.data.sporthub.WorkoutWithExercises
-import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await

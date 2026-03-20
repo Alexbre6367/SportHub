@@ -31,11 +31,8 @@ import com.example.sporthub.ui.screen.login.DetailsScreen
 import com.example.sporthub.ui.screen.login.ForgotPasswordBottomBar
 import com.example.sporthub.ui.screen.login.LevelScreen
 import com.example.sporthub.ui.screen.login.SignInBottomBar
-import com.example.sporthub.ui.screen.login.SignInScreen
 import com.example.sporthub.ui.screen.login.SignUpEmailBottomBar
-import com.example.sporthub.ui.screen.login.SignUpEmailScreen
 import com.example.sporthub.ui.screen.login.SignUpPasswordBottomBar
-import com.example.sporthub.ui.screen.login.SignUpPasswordScreen
 import com.example.sporthub.ui.screen.login.StartScreen
 import com.example.sporthub.ui.screen.login.WelcomeScreen
 import com.example.sporthub.ui.viewmodel.GeminiViewModel
