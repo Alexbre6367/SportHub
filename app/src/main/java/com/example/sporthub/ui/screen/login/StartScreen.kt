@@ -17,8 +17,10 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Fastfood
@@ -30,6 +32,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +56,11 @@ import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun StartScreen(
@@ -59,10 +68,20 @@ fun StartScreen(
     loginViewModel: LoginViewModel
 ) {
     var selectedIndex by remember { mutableIntStateOf(1) }
+    val userData by loginViewModel.currentUser.collectAsState()
+
+    LaunchedEffect(userData) {
+        userData?.let {
+            if(selectedIndex == 1) selectedIndex = it.version
+        }
+    }
+
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(scrollState)
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(LightBlue, OffWhite),
@@ -71,8 +90,8 @@ fun StartScreen(
                 )
             )
             .statusBarsPadding()
-            .padding(horizontal = 28.dp)
-            .padding(top = 38.dp),
+            .padding(horizontal = 20.dp)
+            .padding(top = 38.dp, bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -204,7 +223,7 @@ fun StartScreen(
             fontSize = 18.sp
         )
         Text(
-            text = "Выбор ни на что не влияет",
+            text = "Все бесплатно, выбор можно изменить позже",
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(bottom = 8.dp),
@@ -237,7 +256,11 @@ fun StartScreen(
                         color = if (selectedIndex == 1) gray else Color.Transparent,
                         shape = RoundedCornerShape(24.dp)
                     )
-                    .clickable { selectedIndex = 1 }
+                    .clickable (
+                        onClick = { selectedIndex = 1 },
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                    )
                     .padding(16.dp),
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Center
@@ -305,7 +328,11 @@ fun StartScreen(
                         color = if (selectedIndex == 2) gray else Color.Transparent,
                         shape = RoundedCornerShape(24.dp)
                     )
-                    .clickable { selectedIndex = 2 }
+                    .clickable (
+                        onClick = {selectedIndex = 2 },
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    )
                     .padding(16.dp),
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Center
@@ -359,34 +386,23 @@ fun StartScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(bottom = 24.dp),
+                .navigationBarsPadding(),
             horizontalArrangement = Arrangement.Center
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = CircleShape,
-                        ambientColor = Color.Black.copy(alpha = 0.1f),
-                        spotColor = Color.Black.copy(alpha = 0.3f)
-                    )
+                    .size(58.dp)
+                    .drawBackdrop(backdrop = rememberLayerBackdrop(), shape = { CircleShape }, effects = {
+                        vibrancy()
+                        blur(2f.dp.toPx())
+                        lens(16f.dp.toPx(), 32f.dp.toPx())
+                    })
                     .clickable(
                         onClick = {
                             navController.popBackStack()
                         },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
-                    )
-                    .background(
-                        color = Color.White,
-                        shape = CircleShape
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = Color.White,
-                        shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -400,7 +416,7 @@ fun StartScreen(
 
             Box(
                 modifier = Modifier
-                    .height(56.dp)
+                    .height(58.dp)
                     .weight(1f)
                     .padding(start = 12.dp)
                     .clickable(

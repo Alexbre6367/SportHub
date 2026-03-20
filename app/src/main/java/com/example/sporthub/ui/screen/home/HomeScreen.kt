@@ -2,8 +2,10 @@ package com.example.sporthub.ui.screen.home
 
 import android.Manifest.permission.ACTIVITY_RECOGNITION
 import android.Manifest.permission.POST_NOTIFICATIONS
+import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -39,9 +41,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -49,8 +51,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Opacity
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.WineBar
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -105,7 +107,6 @@ import com.example.sporthub.ui.viewmodel.TimerViewModel
 import com.himanshoe.charty.circle.CircleChart
 import com.himanshoe.charty.circle.model.CircleData
 import com.himanshoe.charty.common.asGradientChartColor
-import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
@@ -184,6 +185,10 @@ fun HomeScreen(
 
     val scrollState = rememberScrollState()
 
+    BackHandler(enabled = true) {
+        (context as? Activity)?.finish()
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -196,10 +201,11 @@ fun HomeScreen(
             .padding(horizontal = 20.dp)
             .statusBarsPadding()
     ) {
-        HomeTopAppBa(
+        HomeTopAppBar(
             navController,
             loginViewModel,
-            timerViewModel
+            timerViewModel,
+            homeViewModel
         )
 
         Spacer(Modifier.height(14.dp))
@@ -328,7 +334,11 @@ fun HomeScreen(
                 Row(
                     Modifier
                         .fillMaxHeight()
-                        .clickable { homeViewModel.addWater() },
+                        .clickable (
+                            onClick = { homeViewModel.addWater() },
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ),
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.Start
                 ) {
@@ -337,11 +347,7 @@ fun HomeScreen(
                             .drawBackdrop(
                                 backdrop = rememberLayerBackdrop(),
                                 shape = { CircleShape },
-                                effects = {
-                                    vibrancy()
-                                    blur(2f.dp.toPx())
-                                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                                }
+                                effects = {  }
                             )
                             .height(40.dp)
                             .width(130.dp)
@@ -362,11 +368,7 @@ fun HomeScreen(
                             .drawBackdrop(
                                 backdrop = rememberLayerBackdrop(),
                                 shape = { CircleShape },
-                                effects = {
-                                    vibrancy()
-                                    blur(2f.dp.toPx())
-                                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                                }
+                                effects = {  }
                             )
                             .size(40.dp)
                             .clip(CircleShape),
@@ -390,7 +392,6 @@ fun HomeScreen(
             ) {
                 WaterButton(
                     waterCount = water,
-                    backdrop = rememberLayerBackdrop(),
                     onAddClick = { homeViewModel.addWater() }
                 )
             }
@@ -674,13 +675,12 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(Modifier.height(4.dp))
                 Icon(
                     Icons.Default.LocalFireDepartment,
                     contentDescription = null,
                     tint = Color.Unspecified,
                     modifier = Modifier
-                        .size(82.dp)
+                        .size(72.dp)
                         .graphicsLayer(alpha = 0.99f)
                         .drawWithCache {
                             val brush = Brush.verticalGradient(
@@ -754,7 +754,6 @@ fun HomeScreen(
                 }
             }
         }
-
         Spacer(
             modifier = Modifier
                 .navigationBarsPadding()
@@ -763,10 +762,11 @@ fun HomeScreen(
     }
 }
 @Composable
-fun HomeTopAppBa(
+fun HomeTopAppBar(
     navController: NavController,
     loginViewModel: LoginViewModel,
-    timerViewModel: TimerViewModel
+    timerViewModel: TimerViewModel,
+    homeViewModel: HomeViewModel
 ) {
 
     val currentDate = remember {
@@ -792,7 +792,8 @@ fun HomeTopAppBa(
                 .clickable(
                     onClick = { navController.navigate("account_screen") },
                     indication = null,
-                    interactionSource = remember { MutableInteractionSource() }),
+                    interactionSource = remember { MutableInteractionSource() }
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -914,13 +915,13 @@ fun HomeTopAppBa(
                     )
                     .background(color = Color.Black, shape = RoundedCornerShape(16.dp))
                     .clickable(
-                        onClick = { },
+                        onClick = { navController.navigate("timer_screen") },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    Icons.Default.Add,
+                    Icons.Outlined.Timer,
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(22.dp)
@@ -939,6 +940,7 @@ fun HomeGlassBottomBar(
 ) {
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
+    val userData by loginViewModel.currentUser.collectAsState()
 
     Box(Modifier.fillMaxSize()) {
 
@@ -958,7 +960,7 @@ fun HomeGlassBottomBar(
             modifier = Modifier
                 .navigationBarsPadding()
                 .padding(horizontal = 20.dp, vertical = 12.dp)
-                .height(70.dp)
+                .height(58.dp)
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
             verticalAlignment = Alignment.CenterVertically,
@@ -996,7 +998,7 @@ fun HomeGlassBottomBar(
                         Icons.Default.Home,
                         contentDescription = null,
                         tint = black,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Text(
                         text = "Home",
@@ -1011,19 +1013,23 @@ fun HomeGlassBottomBar(
                         .weight(1f)
                         .fillMaxHeight()
                         .clickable(onClick = {
-                            navController.navigate("timer_screen")
+                            if(userData?.select == true) {
+                                navController.navigate("workout_screen")
+                            } else{
+                                navController.navigate("selection_screen")
+                            }
                         }),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        Icons.Default.Timer,
+                        Icons.Default.FitnessCenter,
                         contentDescription = null,
                         tint = LightGray,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "Timer",
+                        text = "Workout",
                         color = LightGray,
                         style = MaterialTheme.typography.titleLarge,
                         fontSize = 14.sp,
@@ -1043,18 +1049,19 @@ fun HomeGlassBottomBar(
                             lens(16f.dp.toPx(), 32f.dp.toPx())
                         }
                     )
+                    .clickable{ navController.navigate("gemini_screen") }
                     .aspectRatio(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    Icons.Default.FitnessCenter,
+                    Icons.AutoMirrored.Default.Chat,
                     contentDescription = null,
                     tint = LightGray,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = "Camera",
+                    text = "Chat",
                     color = LightGray,
                     style = MaterialTheme.typography.titleLarge,
                     fontSize = 14.sp,
@@ -1067,7 +1074,6 @@ fun HomeGlassBottomBar(
 @Composable
 fun WaterButton(
     waterCount: Int,
-    backdrop: Backdrop,
     onAddClick: () -> Unit
 ) {
     val maxWater = 10f
@@ -1099,17 +1105,15 @@ fun WaterButton(
         modifier = Modifier
             .size(120.dp)
             .drawBackdrop(
-                backdrop = backdrop,
+                backdrop = rememberLayerBackdrop(),
                 shape = { CircleShape },
-                effects = {
-                    vibrancy()
-                    blur(2f.dp.toPx())
-                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                }
+                effects = {  }
             )
             .clip(CircleShape)
             .clickable(
-                onClick = { onAddClick() }
+                onClick = { onAddClick() },
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
             )
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {

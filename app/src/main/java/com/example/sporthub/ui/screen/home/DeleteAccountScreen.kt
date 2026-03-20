@@ -1,8 +1,7 @@
-package com.example.sporthub.ui.screen.login
+package com.example.sporthub.ui.screen.home
 
-import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +33,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,10 +41,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -53,13 +50,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
-import com.example.sporthub.ui.viewmodel.AuthState
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -69,10 +65,9 @@ import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
 @Composable
-fun SignUpPasswordScreen(
+fun DeleteAccountScreen(
     navController: NavController,
     loginViewModel: LoginViewModel,
-    encodedEmail: String,
     passwordState: MutableState<String>
 ) {
     var passwordVisibility by remember { mutableStateOf(false) }
@@ -80,13 +75,6 @@ fun SignUpPasswordScreen(
     val focusManager = LocalFocusManager.current
 
     val scrollState = rememberScrollState()
-
-    val email = remember {
-        URLDecoder.decode(
-            encodedEmail,
-            StandardCharsets.UTF_8.toString()
-        )
-    }
 
     Column(
         modifier = Modifier
@@ -111,14 +99,14 @@ fun SignUpPasswordScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Set Your Password",
+            text = "Enter your password",
             color = black,
             style = MaterialTheme.typography.titleLarge,
             fontSize = 30.sp,
             textAlign = TextAlign.Center
         )
         Text(
-            text = "Choose a strong password to protect your data",
+            text = "To delete your account confirm your password.",
             color = gray,
             style = MaterialTheme.typography.bodyLarge,
             fontSize = 20.sp,
@@ -134,15 +122,7 @@ fun SignUpPasswordScreen(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.Start
         ) {
-            Spacer(Modifier.height(16.dp))
-            Text(
-                text = "$email",
-                color = black,
-                style = MaterialTheme.typography.titleLarge,
-                fontSize = 18.sp
-            )
-
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(24.dp))
             OutlinedTextField(
                 value = passwordState.value,
                 onValueChange = { passwordState.value = it },
@@ -186,45 +166,21 @@ fun SignUpPasswordScreen(
 }
 
 @Composable
-fun SignUpPasswordBottomBar(
-    navController: NavHostController,
+fun DeleteAccountBottomBar(
+    navController: NavController,
     loginViewModel: LoginViewModel,
-    encodedEmail: String,
 ) {
     val passwordState = remember { mutableStateOf("") }
-    val email = remember {
-        URLDecoder.decode(
-            encodedEmail,
-            StandardCharsets.UTF_8.toString()
-        )
-    }
-
-    val authState by loginViewModel.authState.collectAsState()
-    val context = LocalContext.current
-
-    LaunchedEffect(authState) {
-        if(authState is AuthState.Success) {
-            navController.navigate("level_screen") {
-                popUpTo(0)
-            }
-        } else if(authState is AuthState.Error) {
-            Toast.makeText(
-                context,
-                "Error creating account",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
+    val isDelete by loginViewModel.isDelete.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         val backdrop = rememberLayerBackdrop {
             drawContent()
         }
 
-        SignUpPasswordScreen(
+        DeleteAccountScreen(
             navController,
             loginViewModel,
-            encodedEmail,
             passwordState
         )
 
@@ -272,10 +228,14 @@ fun SignUpPasswordBottomBar(
                     .height(58.dp)
                     .weight(1f)
                     .clickable(
+                        enabled = !isDelete,
                         onClick = {
-                            if(passwordState.value.isNotBlank()) {
-                                loginViewModel.signUp(email, passwordState.value)
+                            if (passwordState.value.isNotEmpty()) {
+                                loginViewModel.deleteAccount(passwordState.value) {
+                                    navController.navigate("welcome_screen")
+                                }
                             }
+
                         },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
@@ -286,14 +246,26 @@ fun SignUpPasswordBottomBar(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Continue",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 18.sp
-                )
+                AnimatedContent(
+                    targetState = isDelete,
+                    label = "loading_animation",
+                ) { targetIsDelete ->
+                    if (targetIsDelete) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Delete",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
             }
         }
     }
 }
-

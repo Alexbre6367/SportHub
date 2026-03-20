@@ -1,7 +1,6 @@
 package com.example.sporthub.ui.screen.login
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,6 +26,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +36,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -61,22 +68,28 @@ import com.example.sporthub.ui.theme.googleGreen
 import com.example.sporthub.ui.theme.googleRed
 import com.example.sporthub.ui.theme.googleYellow
 import com.example.sporthub.ui.theme.gray
+import com.example.sporthub.ui.viewmodel.AuthState
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 
-
-@RequiresApi(Build.VERSION_CODES.P)
 @Composable
 fun SignInScreen(
     navController: NavHostController,
-    loginViewModel: LoginViewModel
+    loginViewModel: LoginViewModel,
+    emailState: MutableState<String>,
+    passwordState: MutableState<String>
 ) {
-    val emailState = remember { mutableStateOf("") }
-    val passwordState = remember { mutableStateOf("") }
     var passwordVisibility by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
 
     val scrollState = rememberScrollState()
+
+    var openDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -208,10 +221,10 @@ fun SignInScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(58.dp)
                 .clickable(
                     onClick = {
-
+                        openDialog = !openDialog
                     },
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
@@ -248,10 +261,10 @@ fun SignInScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(58.dp)
                 .clickable(
                     onClick = {
-
+                        openDialog = !openDialog
                     },
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
@@ -288,47 +301,89 @@ fun SignInScreen(
         Text(
             text = "Forgot your password?",
             color = black,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.titleLarge,
             fontSize = 16.sp,
             modifier = Modifier
                 .clickable{
-
+                    navController.navigate("forgot_password_screen")
                 }
         )
 
+        if (openDialog) {
+            AlertDialog(
+                onDismissRequest = { openDialog = false },
+                title = { Text(text = "In development") },
+                confirmButton = {
+                    Button(
+                        onClick = { openDialog = false },
+                        colors = ButtonDefaults.buttonColors(Color.White)
+                    ) {
+                        Text("Ok")
+                    }
+                },
+                containerColor = Color.DarkGray,
+                titleContentColor = Color.White,
+            )
+        }
+    }
+}
 
-        Spacer(modifier = Modifier.weight(1f))
+@Composable
+fun SignInBottomBar(
+    navController: NavHostController,
+    loginViewModel: LoginViewModel
+) {
+    val emailState = remember { mutableStateOf("") }
+    val passwordState = remember { mutableStateOf("") }
+    val authState by loginViewModel.authState.collectAsState()
+    val isLoading = authState is AuthState.Loading
+    LaunchedEffect(authState) {
+        if(authState == AuthState.Success) {
+            navController.navigate(loginViewModel.getStartScreen()) {
+                popUpTo(0)
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        val backdrop = rememberLayerBackdrop {
+            drawContent()
+        }
+
+        SignInScreen(
+            navController,
+            loginViewModel,
+            emailState,
+            passwordState
+        )
+
         Row(
             modifier = Modifier
-                .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(bottom = 24.dp),
-            horizontalArrangement = Arrangement.Center
+                .imePadding()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = CircleShape,
-                        ambientColor = Color.Black.copy(alpha = 0.1f),
-                        spotColor = Color.Black.copy(alpha = 0.3f)
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { CircleShape },
+                        effects = {
+                            vibrancy()
+                            blur(2f.dp.toPx())
+                            lens(16f.dp.toPx(), 32f.dp.toPx())
+                        }
                     )
+                    .size(58.dp)
                     .clickable(
                         onClick = {
                             navController.popBackStack()
                         },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
-                    )
-                    .background(
-                        color = Color.White,
-                        shape = CircleShape
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = Color.White,
-                        shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -342,22 +397,21 @@ fun SignInScreen(
 
             Box(
                 modifier = Modifier
-                    .height(56.dp)
-                    .weight(1f)
                     .padding(start = 12.dp)
+                    .height(58.dp)
+                    .weight(1f)
                     .clickable(
+                        enabled = !isLoading,
                         onClick = {
                             if (emailState.value.isNotEmpty() && passwordState.value.isNotEmpty()) {
                                 loginViewModel.signIn(emailState.value, passwordState.value)
-                                loginViewModel.loadUserData()
-                                navController.navigate("home_screen")
                             }
                         },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
                     )
                     .background(
-                        color = if(emailState.value.isNotEmpty() && passwordState.value.isNotEmpty()) black else black.copy(alpha = 0.5f),
+                        color = black,
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center

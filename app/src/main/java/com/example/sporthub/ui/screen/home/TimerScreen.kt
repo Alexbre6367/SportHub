@@ -12,6 +12,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,15 +33,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -69,6 +71,7 @@ import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.theme.ringColor
+import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.example.sporthub.ui.viewmodel.TimerViewModel
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
@@ -83,7 +86,7 @@ import com.sd.lib.compose.wheel_picker.rememberFWheelPickerState
 @Composable
 fun TimerScreen(
     modifier: Modifier = Modifier,
-    timerViewModel: TimerViewModel
+    timerViewModel: TimerViewModel,
 ) {
     val scrollState = rememberScrollState()
     val secondsLeft by timerViewModel.timerLeft.collectAsStateWithLifecycle()
@@ -170,17 +173,24 @@ fun TimerScreen(
         Spacer(Modifier.height(10.dp))
         Box(
             modifier = Modifier
-                .clickable {
-                    if (secondsLeft > 0) {
-                        if (timerViewModel.isPaused) {
-                            timerViewModel.resumeTimer()
+                .clickable(
+                    onClick = {
+                        if (secondsLeft > 0) {
+                            if (timerViewModel.isPaused) {
+                                timerViewModel.resumeTimer()
+                            } else {
+                                timerViewModel.stopTimer()
+                            }
                         } else {
-                            timerViewModel.stopTimer()
+                            timerViewModel.startTimer(
+                                context,
+                                selectedMinutes.toLong() * 60 + selectedSeconds
+                            )
                         }
-                    } else {
-                        timerViewModel.startTimer(context, selectedMinutes.toLong() * 60 + selectedSeconds)
-                    }
-                }
+                    },
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                )
                 .width(340.dp)
                 .height(60.dp)
                 .shadow(
@@ -213,10 +223,14 @@ fun TimerScreen(
         ) {
             Box(
                 modifier = Modifier
-                    .clickable {
-                        timerViewModel.startTimer(context, 60)
-                        selectedTime = 60
-                    }
+                    .clickable(
+                        onClick = {
+                            timerViewModel.startTimer(context, 60)
+                            selectedTime = 60
+                        },
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    )
                     .width(96.dp)
                     .height(50.dp)
                     .shadow(
@@ -241,10 +255,14 @@ fun TimerScreen(
             Spacer(Modifier.width(12.dp))
             Box(
                 modifier = Modifier
-                    .clickable {
-                        timerViewModel.startTimer(context, 120)
-                        selectedTime = 120
-                    }
+                    .clickable(
+                        onClick = {
+                            timerViewModel.startTimer(context, 120)
+                            selectedTime = 120
+                        },
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    )
                     .width(96.dp)
                     .height(50.dp)
                     .shadow(
@@ -269,10 +287,14 @@ fun TimerScreen(
             Spacer(Modifier.width(12.dp))
             Box(
                 modifier = Modifier
-                    .clickable {
-                        timerViewModel.startTimer(context, 300)
-                        selectedTime = 300
-                    }
+                    .clickable(
+                        onClick = {
+                            timerViewModel.startTimer(context, 300)
+                            selectedTime = 300
+                        },
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    )
                     .width(96.dp)
                     .height(50.dp)
                     .shadow(
@@ -301,23 +323,25 @@ fun TimerScreen(
 @Composable
 fun TimerGlassBottomBar(
     navController: NavController,
-    timerViewModel: TimerViewModel
+    timerViewModel: TimerViewModel,
+    loginViewModel: LoginViewModel
 ) {
     Box(Modifier.fillMaxSize()) {
         val backdrop = rememberLayerBackdrop {
             drawContent()
         }
+        val userData by loginViewModel.currentUser.collectAsState()
 
         TimerScreen(
             modifier = Modifier.layerBackdrop(backdrop),
-            timerViewModel = timerViewModel
+            timerViewModel,
         )
 
         Row(
             modifier = Modifier
                 .navigationBarsPadding()
                 .padding(horizontal = 20.dp, vertical = 12.dp)
-                .height(70.dp)
+                .height(58.dp)
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
             verticalAlignment = Alignment.CenterVertically,
@@ -325,11 +349,15 @@ fun TimerGlassBottomBar(
         ) {
             Row(
                 modifier = Modifier
-                    .drawBackdrop(backdrop = backdrop, shape = { CircleShape }, effects = {
-                        vibrancy()
-                        blur(2f.dp.toPx())
-                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                    })
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { CircleShape },
+                        effects = {
+                            vibrancy()
+                            blur(2f.dp.toPx())
+                            lens(16f.dp.toPx(), 32f.dp.toPx())
+                        }
+                    )
                     .width(200.dp)
                     .fillMaxHeight()
                     .padding(4.dp)
@@ -347,12 +375,12 @@ fun TimerGlassBottomBar(
                     Icon(
                         Icons.Default.Home,
                         contentDescription = null,
-                        tint = black,
-                        modifier = Modifier.size(24.dp)
+                        tint = LightGray,
+                        modifier = Modifier.size(20.dp)
                     )
                     Text(
                         text = "Home",
-                        color = black,
+                        color = LightGray,
                         style = MaterialTheme.typography.titleLarge,
                         fontSize = 14.sp,
                     )
@@ -360,25 +388,28 @@ fun TimerGlassBottomBar(
 
                 Column(
                     modifier = Modifier
-                        .drawBackdrop(backdrop = backdrop, shape = { CircleShape }, effects = {
-                            vibrancy()
-                            blur(4f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        })
                         .weight(1f)
                         .fillMaxHeight()
-                        .clickable(onClick = { }),
+                        .clickable(
+                            onClick = {
+                                if (userData?.select == true) {
+                                    navController.navigate("workout_screen")
+                                } else {
+                                    navController.navigate("selection_screen")
+                                }
+                            }
+                        ),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        Icons.Default.Timer,
+                        Icons.Default.FitnessCenter,
                         contentDescription = null,
                         tint = LightGray,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "Timer",
+                        text = "Workout",
                         color = LightGray,
                         style = MaterialTheme.typography.titleLarge,
                         fontSize = 14.sp,
@@ -398,18 +429,19 @@ fun TimerGlassBottomBar(
                             lens(16f.dp.toPx(), 32f.dp.toPx())
                         }
                     )
+                    .clickable { navController.navigate("gemini_screen") }
                     .aspectRatio(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    Icons.Default.PhotoCamera,
+                    Icons.AutoMirrored.Default.Chat,
                     contentDescription = null,
                     tint = LightGray,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = "Camera",
+                    text = "Chat",
                     color = LightGray,
                     style = MaterialTheme.typography.titleLarge,
                     fontSize = 14.sp,
@@ -442,7 +474,11 @@ fun TimerRing(
         modifier = modifier
             .width(350.dp)
             .height(220.dp)
-            .clickable(onClick = onPauseClick),
+            .clickable(
+                onClick = onPauseClick,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Canvas(

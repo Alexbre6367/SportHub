@@ -41,4 +41,11 @@ class SecureStorage private constructor(context: Context) {
     }
 
     fun getUserId(): String? = sharedPreferences.getString(KEY_USER_ID, null)
+
+    fun clearUserId() {
+        sharedPreferences.edit {
+            remove(KEY_USER_ID)
+        }
+    }
+
 }

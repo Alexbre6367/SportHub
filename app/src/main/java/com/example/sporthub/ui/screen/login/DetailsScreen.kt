@@ -1,7 +1,6 @@
 package com.example.sporthub.ui.screen.login
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +38,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +62,11 @@ import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -73,19 +78,31 @@ fun DetailsScreen(
     navController: NavHostController,
     loginViewModel: LoginViewModel
 ) {
-    val nameState = remember { mutableStateOf("") }
-    val genderState = remember { mutableStateOf("") }
-    val weightState = remember { mutableStateOf("") }
-    val heightState = remember { mutableStateOf("") }
-    val birthdateState = remember { mutableStateOf("") }
-    val isFormValid = nameState.value.isNotBlank() &&
-            genderState.value.isNotBlank() &&
-            weightState.value.isNotBlank() &&
-            heightState.value.isNotBlank() &&
-            birthdateState.value.isNotBlank()
+    val userData by loginViewModel.currentUser.collectAsState()
+
+    var nameState by remember(userData) { mutableStateOf(userData?.name ?: "") }
+    var genderState by remember(userData) { mutableStateOf(userData?.gender ?: "") }
+    var weightState by remember(userData) { mutableStateOf(if((userData?.weight ?: 0f) > 0) userData?.weight.toString() else "") }
+    var heightState by remember(userData) { mutableStateOf(if((userData?.height ?: 0) > 0) userData?.height.toString() else "") }
+    var birthdateState by remember(userData) {
+        mutableStateOf(
+            if ((userData?.birthdate ?: 0L) > 0) {
+                SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(userData!!.birthdate))
+            } else ""
+        )
+    }
+
+    val isFormValid = nameState.isNotBlank() &&
+            genderState.isNotBlank() &&
+            weightState.isNotBlank() &&
+            heightState.isNotBlank() &&
+            birthdateState.isNotBlank()
+
 
     var openDialog by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState()
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = userData?.birthdate
+    )
 
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
@@ -104,10 +121,10 @@ fun DetailsScreen(
             ) {
                 focusManager.clearFocus()
             }
-            .padding(bottom = 24.dp, top = 70.dp)
+            .padding(bottom = 12.dp, top = 70.dp)
             .statusBarsPadding()
             .navigationBarsPadding()
-            .padding(horizontal = 28.dp),
+            .padding(horizontal = 20.dp),
     ) {
         Text(
             text = "Enter your details",
@@ -128,10 +145,16 @@ fun DetailsScreen(
         )
         Spacer(Modifier.height(50.dp))
         TextField(
-            value = nameState.value,
-            onValueChange = { nameState.value = it },
+            value = nameState,
+            onValueChange = { nameState = it },
             singleLine = true,
-            placeholder = { Text("Name", style = MaterialTheme.typography.titleLarge.copy(color = gray), fontSize = 24.sp) },
+            placeholder = {
+                Text(
+                    "Name",
+                    style = MaterialTheme.typography.titleLarge.copy(color = gray),
+                    fontSize = 24.sp
+                )
+            },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Person,
@@ -154,8 +177,8 @@ fun DetailsScreen(
             modifier = Modifier.fillMaxWidth(),
         )
         TextField(
-            value = genderState.value,
-            onValueChange = { genderState.value = it },
+            value = genderState,
+            onValueChange = { genderState = it },
             singleLine = true,
             placeholder = { Text("Gender", style = MaterialTheme.typography.titleLarge.copy(color = gray)) },
             leadingIcon = {
@@ -180,10 +203,10 @@ fun DetailsScreen(
             modifier = Modifier.fillMaxWidth(),
         )
         TextField(
-            value = weightState.value,
+            value = weightState,
             onValueChange = { newWeight ->
                 if (newWeight.all { it.isDigit() }) {
-                    weightState.value = newWeight
+                    weightState = newWeight
                 }
             },
             singleLine = true,
@@ -224,10 +247,10 @@ fun DetailsScreen(
             modifier = Modifier.fillMaxWidth(),
         )
         TextField(
-            value = heightState.value,
+            value = heightState,
             onValueChange = { newHeight ->
                 if (newHeight.all { it.isDigit() }) {
-                    heightState.value = newHeight
+                    heightState = newHeight
                 }
             },
             singleLine = true,
@@ -268,7 +291,7 @@ fun DetailsScreen(
             modifier = Modifier.fillMaxWidth(),
         )
         TextField(
-            value = birthdateState.value,
+            value = birthdateState,
             onValueChange = {  },
             readOnly = true,
             singleLine = true,
@@ -310,27 +333,18 @@ fun DetailsScreen(
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.3f),
-                                Color.White.copy(alpha = 0.1f)
-                            )
-                        )
-                    )
+                    .drawBackdrop(backdrop = rememberLayerBackdrop(), shape = { CircleShape }, effects = {
+                        vibrancy()
+                        blur(2f.dp.toPx())
+                        lens(16f.dp.toPx(), 32f.dp.toPx())
+                    })
+                    .size(58.dp)
                     .clickable(
                         onClick = {
                             navController.popBackStack()
                         },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
-                    )
-                    .background(
-                        color = Color.White, shape = CircleShape
-                    )
-                    .border(
-                        width = 1.dp, color = Color.White, shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -344,20 +358,19 @@ fun DetailsScreen(
 
             Box(
                 modifier = Modifier
-                    .height(56.dp)
-                    .weight(1f)
                     .padding(start = 12.dp)
+                    .height(58.dp)
+                    .weight(1f)
                     .clickable(
                         onClick = {
                             if (isFormValid) {
-                                val weight = weightState.value.toFloatOrNull() ?: 0f
+                                val weight = weightState.toFloatOrNull() ?: 0f
+                                val height = heightState.toIntOrNull() ?: 0
 
-                                val height = heightState.value.toIntOrNull() ?: 0
-
-                                val birthdate = datePickerState.selectedDateMillis ?: 0L
+                                val birthdate = datePickerState.selectedDateMillis ?: userData?.birthdate ?: 0L
 
                                 loginViewModel.detailsUser(
-                                    nameState.value, genderState.value, weight, height, birthdate
+                                    nameState, genderState, weight, height, birthdate
                                 )
                                 navController.navigate("start_screen")
                             }
@@ -386,8 +399,8 @@ fun DetailsScreen(
                         TextButton(onClick = {
                             val selectedDate = datePickerState.selectedDateMillis
                             if (selectedDate != null) {
-                                val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
-                                birthdateState.value = sdf.format(Date(selectedDate))
+                                val sdf = SimpleDateFormat("dd MM, yyyy", Locale.ENGLISH)
+                                birthdateState = sdf.format(Date(selectedDate))
                             }
                             openDialog = false
                         }) {
@@ -422,6 +435,5 @@ fun DetailsScreen(
         }
     }
 }
-
 
 

@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
@@ -27,6 +29,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +49,11 @@ import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 
 
 @Composable
@@ -53,10 +62,19 @@ fun LevelScreen(
     loginViewModel: LoginViewModel
 ) {
     var selectedIndex by remember { mutableIntStateOf(-1) }
+    val userData by loginViewModel.currentUser.collectAsState()
+    val scrollState = rememberScrollState()
+
+    LaunchedEffect(userData) {
+        userData?.let {
+            if(selectedIndex == -1) selectedIndex = it.level
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(scrollState)
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(LightBlue, OffWhite),
@@ -65,8 +83,8 @@ fun LevelScreen(
                 )
             )
             .statusBarsPadding()
-            .padding(horizontal = 28.dp)
-            .padding(top = 70.dp),
+            .padding(horizontal = 20.dp)
+            .padding(top = 70.dp, bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -125,7 +143,7 @@ fun LevelScreen(
             )
         }
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(24.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -174,7 +192,7 @@ fun LevelScreen(
             )
         }
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(24.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -226,34 +244,23 @@ fun LevelScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(bottom = 24.dp),
+                .navigationBarsPadding(),
             horizontalArrangement = Arrangement.Center
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = CircleShape,
-                        ambientColor = Color.Black.copy(alpha = 0.1f),
-                        spotColor = Color.Black.copy(alpha = 0.3f)
-                    )
+                    .size(58.dp)
+                    .drawBackdrop(backdrop = rememberLayerBackdrop(), shape = { CircleShape }, effects = {
+                        vibrancy()
+                        blur(2f.dp.toPx())
+                        lens(16f.dp.toPx(), 32f.dp.toPx())
+                    })
                     .clickable(
                         onClick = {
                             navController.popBackStack()
                         },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
-                    )
-                    .background(
-                        color = Color.White,
-                        shape = CircleShape
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = Color.White,
-                        shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -267,7 +274,7 @@ fun LevelScreen(
 
             Box(
                 modifier = Modifier
-                    .height(56.dp)
+                    .height(58.dp)
                     .weight(1f)
                     .padding(start = 12.dp)
                     .clickable(

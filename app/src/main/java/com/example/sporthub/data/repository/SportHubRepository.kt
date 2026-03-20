@@ -2,15 +2,27 @@ package com.example.sporthub.data.repository
 
 import android.content.SharedPreferences
 import android.icu.util.Calendar
+import android.util.Log
 import androidx.core.content.edit
 import androidx.health.connect.client.units.Energy
+import com.example.sporthub.data.sporthub.ExerciseEntity
 import com.example.sporthub.data.sporthub.HealthDao
 import com.example.sporthub.data.sporthub.HealthEntity
 import com.example.sporthub.data.sporthub.SportHubDao
 import com.example.sporthub.data.sporthub.User
+import com.example.sporthub.data.sporthub.WorkoutDao
+import com.example.sporthub.data.sporthub.WorkoutEntity
+import com.example.sporthub.data.sporthub.WorkoutWithExercises
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.tasks.await
 
-class SportHubRepository(private val sportHubDao: SportHubDao, private val healthDao: HealthDao) {
+class SportHubRepository(
+    private val sportHubDao: SportHubDao,
+    private val healthDao: HealthDao,
+    private val workoutDao: WorkoutDao
+) {
 
     suspend fun addUser(user: User) {
         sportHubDao.addUser(user)
@@ -24,11 +36,21 @@ class SportHubRepository(private val sportHubDao: SportHubDao, private val healt
         sportHubDao.updateUser(user)
     }
 
-    suspend fun deleteUser(user: User) {
-        sportHubDao.deleteUser(user)
+    suspend fun deleteUser(userId: String) {
+        sportHubDao.deleteUser(userId)
+        try {
+            FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(userId)
+                .delete()
+                .await()
+            Log.d("MyLog", "Пользователь успешно удален из Firestore")
+        } catch (e: Exception) {
+            Log.e("MyLog", "Ошибка при удалении пользователя", e)
+        }
     }
 
-    suspend fun saveHealth(steps: Long, sleep: Long, heart: Int, oxygen: Int, water: Int, calories: Energy, caloriesStrike: Int) {
+    suspend fun saveHealth(steps: Long, sleep: Long, heart: Int, oxygen: Int, water: Int, calories: Energy) {
         val calendar = Calendar.getInstance()
         val dateId = (calendar.get(Calendar.YEAR) * 10000 + (calendar.get(Calendar.MONTH) + 1) * 100 + calendar.get(Calendar.DAY_OF_MONTH)).toLong()
         healthDao.insertHealthData(
@@ -40,24 +62,9 @@ class SportHubRepository(private val sportHubDao: SportHubDao, private val healt
                 oxygen = oxygen,
                 water = water,
                 calories = calories.inKilocalories.toInt(),
-                caloriesStrike = caloriesStrike
             )
         )
     }
-
-    suspend fun deleteAllHealthData(preference: SharedPreferences) {
-        val calendar = Calendar.getInstance()
-        if(calendar.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY) {
-            val todayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
-            val lastUpdateDay = preference.getInt("lastUpdateDay", -1)
-
-            if(lastUpdateDay != todayOfYear) {
-                healthDao.deleteAllHealthData()
-                preference.edit { putInt("lastUpdateDay", todayOfYear) }
-            }
-        }
-    }
-
     fun getHealthForToday(dateId: Long): Flow<HealthEntity?> {
         return healthDao.getLastHealthData(dateId)
     }
@@ -65,4 +72,30 @@ class SportHubRepository(private val sportHubDao: SportHubDao, private val healt
     fun getHealthForWeek(startWeek: Long, endWeek: Long): Flow<List<HealthEntity>> {
         return healthDao.getHealthWeek(startWeek, endWeek)
     }
+
+    //тренировки ниже
+
+    val allWorkout: Flow<List<WorkoutWithExercises>> = workoutDao.getAllWorkout()
+
+    suspend fun addWorkoutWithExercises(workout: WorkoutEntity, exercises: List<ExerciseEntity>) {
+        val workoutId = workoutDao.addWorkout(workout)
+        val exerciseId = exercises.map {
+            if(it.exerciseId < 0) {
+                it.copy(exerciseId = 0, workoutOwnerId = workoutId.toInt())
+            } else {
+                it.copy(workoutOwnerId = workoutId.toInt())
+            }
+        }
+        workoutDao.addExercise(exerciseId)
+        Log.d("MyLog", "Тренировка добавлена $workoutId")
+    }
+
+    suspend fun deleteWorkoutWithExercises(workout: WorkoutEntity) {
+        workoutDao.deleteWorkout(workout)
+    }
+
+    suspend fun deleteExercise(id: Int) {
+        workoutDao.deleteExercise(id)
+    }
+
 }

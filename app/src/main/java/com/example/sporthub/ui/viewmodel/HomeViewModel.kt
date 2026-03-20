@@ -12,7 +12,6 @@ import com.example.sporthub.data.health.HealthState
 import com.example.sporthub.data.repository.SportHubRepository
 import com.example.sporthub.data.sporthub.SportHubDatabase
 import com.example.sporthub.util.SecureStorage
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,14 +23,10 @@ import java.util.Calendar
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = SportHubDatabase.getInstance(application)
-    private val repository = SportHubRepository(db.sportHubDao, db.healthDao)
+    private val repository = SportHubRepository(db.sportHubDao, db.healthDao, db.workoutDao)
     private val healthState = HealthState(application)
 
     private val secureStorage = SecureStorage.getInstance(application)
-
-    val calendar: Calendar = Calendar.getInstance()
-    val dateId = (calendar.get(android.icu.util.Calendar.YEAR) * 10000 + (calendar.get(android.icu.util.Calendar.MONTH) + 1) * 100 + calendar.get(android.icu.util.Calendar.DAY_OF_MONTH)).toLong()
-
     private val _steps = MutableStateFlow(0L)
     val steps = _steps.asStateFlow()
 
@@ -59,7 +54,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _week = MutableStateFlow(List(7) { false })
     val week = _week.asStateFlow()
 
-
     @SuppressLint("DefaultLocale")
     val formatSleep = _sleep.map { totalSleep ->
         val hours = totalSleep / 60
@@ -68,11 +62,14 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "00:00")
 
     init {
-        resetWater()
+        viewModelScope.launch {
+            resetWater()
+            strikeDay()
+        }
         caloriesStrike()
 
         viewModelScope.launch {
-            repository.getHealthForToday(dateId).collect { health ->
+            repository.getHealthForToday(getDayId(Calendar.getInstance())).collect { health ->
                 if(health != null) {
                     _steps.value = health.steps
                     _sleep.value = health.sleep ?: 0L
@@ -80,11 +77,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     _oxygen.value = health.oxygen ?: 0
                     _water.value = health.water ?: 0
                     _calories.value = Energy.kilocalories(health.calories?.toDouble() ?: 0.0)
-                    _caloriesStrike.value = health.caloriesStrike ?: 0
                 }
             }
         }
-        startHeartUpdates()
     }
 
     private suspend fun saveCurrentHealth() {
@@ -95,7 +90,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             oxygen = _oxygen.value,
             water = _water.value,
             calories = _calories.value,
-            caloriesStrike = _caloriesStrike.value
         )
     }
 
@@ -120,8 +114,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     _calories.value = currentCalories
 
                     saveCurrentHealth()
-                    strikeDay()
-                    caloriesStrike()
 
                     Log.d("MyLog", "Показатели здоровья сохранены в базу")
                     Log.d("MyCaloriesStrike", "Калории получены: ${calories.value}")
@@ -134,45 +126,20 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun startHeartUpdates() {
-        viewModelScope.launch {
-            while (true) {
-                try {
-                    if (healthState.checkPermissions()) {
-                        val lastHeartRate = healthState.readHeartToday()
-
-                        _heart.value = lastHeartRate
-
-                        Log.d("MyLog", "Пульс в реальном времени: $lastHeartRate")
-
-                    }
-                } catch (e: Exception) {
-                    Log.e("MyLog", "Ошибка обновления пульса", e)
-                }
-                delay(6000)
-            }
-        }
-    }
-
     fun strikeDay() {
         viewModelScope.launch {
             val uid = secureStorage.getUserId() ?: return@launch
             val user = repository.getUser(uid) ?: return@launch
 
             val calendar = Calendar.getInstance()
-            val today = (calendar.get(Calendar.YEAR) * 10000 +
-                    (calendar.get(Calendar.MONTH) + 1) * 100 +
-                    calendar.get(Calendar.DAY_OF_MONTH)).toLong()
-
-
             val prefs = getApplication<Application>().getSharedPreferences("strike_prefs", MODE_PRIVATE)
             val lastStrikeDate = prefs.getLong("last_strike_date", -1)
 
-            if (lastStrikeDate != today) {
+            if (lastStrikeDate != getDayId(calendar)) {
                 val updatedUser = user.copy(strike = user.strike + 1)
                 repository.updateUser(updatedUser)
 
-                prefs.edit { putLong("last_strike_date", today) }
+                prefs.edit { putLong("last_strike_date", getDayId(calendar)) }
 
                 Log.d("MyLog", "Strike увеличен до: ${updatedUser.strike}")
             }
@@ -191,26 +158,25 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun resetWater() {
-        viewModelScope.launch {
-            val prefs = getApplication<Application>().getSharedPreferences(
-                "daily_reset_prefs",
-                MODE_PRIVATE
-            )
-            val lastResetDate = prefs.getLong("last_reset_date", 0)
+    private suspend fun resetWater() {
+        val prefs = getApplication<Application>().getSharedPreferences(
+            "daily_reset_prefs",
+            MODE_PRIVATE
+        )
+        val lastResetDate = prefs.getLong("last_reset_date", 0)
 
-            val calendar = Calendar.getInstance()
-            val today = (calendar.get(Calendar.YEAR) * 10000 +
-                    (calendar.get(Calendar.MONTH) + 1) * 100 +
-                    calendar.get(Calendar.DAY_OF_MONTH)).toLong()
+        val calendar = Calendar.getInstance()
+        val today = (calendar.get(Calendar.YEAR) * 10000 +
+                (calendar.get(Calendar.MONTH) + 1) * 100 +
+                calendar.get(Calendar.DAY_OF_MONTH)).toLong()
 
-            if (lastResetDate < today) {
-                _water.value = 0
-                prefs.edit { putLong("last_reset_date", today) }
-                saveCurrentHealth()
-                Log.d("MyLog", "Вода успешно сброшена")
-            }
+        if (lastResetDate < today) {
+            _water.value = 0
+            prefs.edit { putLong("last_reset_date", today) }
+            saveCurrentHealth()
+            Log.d("MyLog", "Вода успешно сброшена")
         }
+
     }
 
     private fun caloriesStrike() {
@@ -232,9 +198,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     val currentId = getDayId(tempCalendar)
                     val health = map[currentId]
 
-                    progress[i] = (health?.calories ?: 0) >= 1000
-                    tempCalendar.add(Calendar.DAY_OF_WEEK, 1)
+                    progress[i] = (health?.calories ?: 0) >= 300
+                    tempCalendar.add(Calendar.DAY_OF_MONTH, 1)
                 }
+
+                _caloriesStrike.value = progress.count { it }
                 _week.value = progress
             }
         }

@@ -39,6 +39,7 @@
             android:foregroundServiceType="health" />
         <activity
             android:name=".MainActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true"
             android:theme="@style/Theme.SportHub">
 

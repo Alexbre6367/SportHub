@@ -5,11 +5,21 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [User::class, HealthEntity::class],  version = 17, exportSchema = false)
+@Database(
+    entities = [
+        User::class,
+        HealthEntity::class,
+        WorkoutEntity::class,
+        ExerciseEntity::class
+    ],
+    version = 22,
+    exportSchema = false
+)
 abstract class SportHubDatabase: RoomDatabase() {
 
     abstract val sportHubDao: SportHubDao
     abstract val healthDao: HealthDao
+    abstract val workoutDao: WorkoutDao
 
     companion object {
         private var INSTANCE: SportHubDatabase? = null

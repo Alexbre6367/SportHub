@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -19,8 +20,8 @@ interface SportHubDao{
     @Update
     suspend fun updateUser(user: User)
 
-    @Delete
-    suspend fun deleteUser(user: User)
+    @Query("DELETE FROM user_table WHERE userId = :userId")
+    suspend fun deleteUser(userId: String): Int
 }
 
 @Dao
@@ -36,4 +37,22 @@ interface HealthDao {
 
     @Query("DELETE FROM health_table")
     suspend fun deleteAllHealthData()
+}
+
+@Dao
+interface WorkoutDao {
+    @Transaction
+    @Query("Select * FROM workout_table")
+    fun getAllWorkout(): Flow<List<WorkoutWithExercises>>
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addWorkout(workout: WorkoutEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addExercise(exercises: List<ExerciseEntity>)
+
+    @Delete
+    suspend fun deleteWorkout(workout: WorkoutEntity)
+
+    @Query("DELETE FROM exercise_table WHERE exerciseId = :id")
+    suspend fun deleteExercise(id: Int)
 }

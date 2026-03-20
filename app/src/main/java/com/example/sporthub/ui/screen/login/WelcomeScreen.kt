@@ -49,9 +49,9 @@ fun WelcomeScreen(
                     endY = 1500f
                 )
             )
-            .padding(bottom = 24.dp)
+            .padding(bottom = 12.dp)
             .navigationBarsPadding()
-            .padding(horizontal = 28.dp),
+            .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(Modifier.weight(1f))
@@ -76,7 +76,7 @@ fun WelcomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(58.dp)
                 .clickable(
                     onClick = {
                         navController.navigate("sign_up_email_screen")
@@ -112,7 +112,7 @@ fun WelcomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(58.dp)
                 .clickable(
                     onClick = {
                         navController.navigate("sign_in_screen")
