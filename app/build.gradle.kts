@@ -22,13 +22,25 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+//    splits {
+//        abi {
+//            isEnable = true
+//            reset()
+//            include("armeabi-v7a", "arm64-v8a")
+//            isUniversalApk = false
+//        }
+//    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
@@ -59,12 +71,14 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     implementation("androidx.room:room-runtime:2.8.4")
     implementation("androidx.room:room-ktx:2.8.4")
+    implementation("androidx.compose.runtime:runtime-livedata:1.10.5")
     ksp("androidx.room:room-compiler:2.8.4")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")
 
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
+    implementation("com.google.firebase:firebase-ai")
     implementation(platform("com.google.firebase:firebase-bom:34.8.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
