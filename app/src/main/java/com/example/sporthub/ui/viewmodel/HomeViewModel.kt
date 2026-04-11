@@ -15,6 +15,7 @@ import com.example.sporthub.util.SecureStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -54,6 +55,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _week = MutableStateFlow(List(7) { false })
     val week = _week.asStateFlow()
 
+    private val _entryWeek = MutableStateFlow(List(7) { false })
+    val entryWeek = _entryWeek.asStateFlow()
+
     @SuppressLint("DefaultLocale")
     val formatSleep = _sleep.map { totalSleep ->
         val hours = totalSleep / 60
@@ -65,6 +69,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             resetWater()
             strikeDay()
+            fetchUserEntries()
         }
         caloriesStrike()
 
@@ -97,7 +102,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val uid = secureStorage.getUserId()
-                val user = uid?.let { repository.getUser(it) }
+                val user = uid?.let { repository.getUser(it) }?.first()
                 val weight = user?.weight
 
                 if (healthState.checkPermissions()) {
@@ -122,26 +127,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 }
             } catch (e: Exception) {
                 Log.e("MyLog", "Ошибка при получении данных здоровья", e)
-            }
-        }
-    }
-
-    fun strikeDay() {
-        viewModelScope.launch {
-            val uid = secureStorage.getUserId() ?: return@launch
-            val user = repository.getUser(uid) ?: return@launch
-
-            val calendar = Calendar.getInstance()
-            val prefs = getApplication<Application>().getSharedPreferences("strike_prefs", MODE_PRIVATE)
-            val lastStrikeDate = prefs.getLong("last_strike_date", -1)
-
-            if (lastStrikeDate != getDayId(calendar)) {
-                val updatedUser = user.copy(strike = user.strike + 1)
-                repository.updateUser(updatedUser)
-
-                prefs.edit { putLong("last_strike_date", getDayId(calendar)) }
-
-                Log.d("MyLog", "Strike увеличен до: ${updatedUser.strike}")
             }
         }
     }
@@ -176,7 +161,57 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             saveCurrentHealth()
             Log.d("MyLog", "Вода успешно сброшена")
         }
+    }
 
+
+    private fun fetchUserEntries() {
+        viewModelScope.launch {
+            val calendar = Calendar.getInstance()
+
+            calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            val startOfWeek = getDayId(calendar)
+
+            calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+            val endOfWeek = getDayId(calendar)
+
+            repository.getUserForWeek(startOfWeek, endOfWeek).collect { entities ->
+                val progress = MutableList(7) { false }
+                val map = entities.map { it.date }.toSet()
+                val tempCalendar = Calendar.getInstance()
+                tempCalendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+
+                for (i in 0..6) {
+                    progress[i] = map.contains(getDayId(tempCalendar))
+                    tempCalendar.add(Calendar.DAY_OF_MONTH, 1)
+                }
+
+                _entryWeek.value = progress
+            }
+        }
+    }
+
+    fun strikeDay() {
+        viewModelScope.launch {
+            val uid = secureStorage.getUserId() ?: return@launch
+            val user = repository.getUser(uid).first() ?: return@launch
+            val today = getDayId(Calendar.getInstance())
+
+            repository.saveUserDaily(user)
+
+            val prefs = getApplication<Application>().getSharedPreferences(
+                "daily_reset_prefs",
+                MODE_PRIVATE
+            )
+            val lastStrikeDate = prefs.getLong("last_strike_date", -1)
+            if (lastStrikeDate != today) {
+                val updatedUser = user.copy(strike = user.strike + 1)
+                repository.saveUserDaily(updatedUser)
+
+                prefs.edit { putLong("last_strike_date", today) }
+
+                Log.d("MyLog", "Strike увеличен до: ${updatedUser.strike}")
+            }
+        }
     }
 
     private fun caloriesStrike() {
