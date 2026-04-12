@@ -8,10 +8,10 @@ import androidx.core.content.edit
 import androidx.health.connect.client.units.Energy
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sporthub.data.auth.SecureStorage
 import com.example.sporthub.data.health.HealthState
 import com.example.sporthub.data.repository.SportHubRepository
 import com.example.sporthub.data.sporthub.SportHubDatabase
-import com.example.sporthub.util.SecureStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow

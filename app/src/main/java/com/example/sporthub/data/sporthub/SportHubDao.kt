@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SportHubDao{
-    @Query("SELECT * FROM user_table WHERE userId = :userId")
-    suspend fun getUser(userId: String): User?
+    @Query("SELECT * FROM user_table WHERE userId = :userId ORDER BY date DESC LIMIT 1 ")
+    fun getUser(userId: String): Flow<User?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addUser(user: User)
@@ -22,6 +22,9 @@ interface SportHubDao{
 
     @Query("DELETE FROM user_table WHERE userId = :userId")
     suspend fun deleteUser(userId: String): Int
+
+    @Query("SELECT * FROM user_table WHERE date >= :startWeek AND date <= :endWeek")
+    fun getUserWeek(startWeek: Long, endWeek: Long): Flow<List<User>>
 }
 
 @Dao

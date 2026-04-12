@@ -1,5 +1,6 @@
 package com.example.sporthub.ui.screen.home
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -62,11 +64,11 @@ import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun DeleteAccountScreen(
-    navController: NavController,
     loginViewModel: LoginViewModel,
     passwordState: MutableState<String>
 ) {
     var passwordVisibility by remember { mutableStateOf(false) }
+    val isGoogleAccount by loginViewModel.isGoogleAccount.collectAsState()
 
     val focusManager = LocalFocusManager.current
 
@@ -95,14 +97,14 @@ fun DeleteAccountScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Enter your password",
+            text = if(isGoogleAccount) "Enter DELETE to confirm" else "Enter your password",
             color = black,
             style = MaterialTheme.typography.titleLarge,
             fontSize = 30.sp,
             textAlign = TextAlign.Center
         )
         Text(
-            text = "To delete your account confirm your password.",
+            text = if(isGoogleAccount) "Confirm that you want to delete your account." else "To delete your account confirm your password.",
             color = gray,
             style = MaterialTheme.typography.bodyLarge,
             fontSize = 20.sp,
@@ -137,7 +139,7 @@ fun DeleteAccountScreen(
                 },
                 placeholder = {
                     Text(
-                        "Enter password",
+                        text = if(isGoogleAccount) "Enter DELETE" else "Enter password",
                         style = MaterialTheme.typography.titleLarge.copy(color = gray),
                         fontSize = 16.sp
                     )
@@ -168,6 +170,7 @@ fun DeleteAccountBottomBar(
 ) {
     val passwordState = remember { mutableStateOf("") }
     val isDelete by loginViewModel.isDelete.collectAsState()
+    val context = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize()) {
         val backdrop = rememberLayerBackdrop {
@@ -175,7 +178,6 @@ fun DeleteAccountBottomBar(
         }
 
         DeleteAccountScreen(
-            navController,
             loginViewModel,
             passwordState
         )
@@ -227,11 +229,42 @@ fun DeleteAccountBottomBar(
                         enabled = !isDelete,
                         onClick = {
                             if (passwordState.value.isNotEmpty()) {
-                                loginViewModel.deleteAccount(passwordState.value) {
-                                    navController.navigate("welcome_screen")
+                                if(loginViewModel.isGoogleAccount.value) {
+                                    if(passwordState.value == "DELETE") {
+                                        loginViewModel.deleteAccount(
+                                            password = null,
+                                            onSuccess = {
+                                                navController.navigate("welcome_screen") {
+                                                    popUpTo(0)
+                                                }
+                                            },
+                                            onError = {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Invalid value or network error",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        )
+                                    } else {
+                                        loginViewModel.deleteAccount(
+                                            password = passwordState.value,
+                                            onSuccess = {
+                                                navController.navigate("welcome_screen") {
+                                                    popUpTo(0)
+                                                }
+                                            },
+                                            onError = {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Invalid value or network error",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        )
+                                    }
                                 }
                             }
-
                         },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },

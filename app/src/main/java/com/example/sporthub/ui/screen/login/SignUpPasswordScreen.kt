@@ -1,6 +1,7 @@
 package com.example.sporthub.ui.screen.login
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,28 +51,30 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
+import com.example.sporthub.ui.theme.colorError
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.AuthState
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
+import kotlinx.coroutines.delay
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
 @Composable
 fun SignUpPasswordScreen(
-    navController: NavController,
-    loginViewModel: LoginViewModel,
     encodedEmail: String,
-    passwordState: MutableState<String>
+    passwordState: MutableState<String>,
+    errorLogin: Boolean,
+    modifier: Modifier = Modifier
 ) {
     var passwordVisibility by remember { mutableStateOf(false) }
 
@@ -86,7 +90,7 @@ fun SignUpPasswordScreen(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
@@ -103,7 +107,7 @@ fun SignUpPasswordScreen(
                 focusManager.clearFocus()
             }
             .statusBarsPadding()
-            .padding(horizontal = 28.dp)
+            .padding(horizontal = 20.dp)
             .padding(top = 70.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -172,13 +176,19 @@ fun SignUpPasswordScreen(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = gray,
-                    unfocusedIndicatorColor = gray,
+                    focusedIndicatorColor = if(errorLogin) colorError else gray,
+                    unfocusedIndicatorColor = if(errorLogin) colorError else gray,
                     cursorColor = gray
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
         }
+
+        Spacer(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .height(120.dp)
+        )
     }
 }
 
@@ -197,6 +207,8 @@ fun SignUpPasswordBottomBar(
     }
 
     val authState by loginViewModel.authState.collectAsState()
+    val isLoading = authState is AuthState.Loading
+
     val context = LocalContext.current
 
     LaunchedEffect(authState) {
@@ -213,16 +225,25 @@ fun SignUpPasswordBottomBar(
         }
     }
 
+    var errorLogin by remember { mutableStateOf(false) }
+    LaunchedEffect(authState) {
+        if(authState == AuthState.Error) {
+            errorLogin = true
+            delay(5000)
+            errorLogin = false
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         val backdrop = rememberLayerBackdrop {
             drawContent()
         }
 
         SignUpPasswordScreen(
-            navController,
-            loginViewModel,
             encodedEmail,
-            passwordState
+            passwordState,
+            errorLogin,
+            modifier = Modifier.layerBackdrop(backdrop)
         )
 
         Row(
@@ -269,6 +290,7 @@ fun SignUpPasswordBottomBar(
                     .height(58.dp)
                     .weight(1f)
                     .clickable(
+                        enabled = !isLoading,
                         onClick = {
                             if(passwordState.value.isNotBlank()) {
                                 loginViewModel.signUp(email, passwordState.value)
@@ -283,12 +305,25 @@ fun SignUpPasswordBottomBar(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Continue",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 18.sp
-                )
+                AnimatedContent(
+                    targetState = isLoading,
+                    label = "loading_animation",
+                ) { targetIsLoading ->
+                    if (targetIsLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Continue",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
             }
         }
     }

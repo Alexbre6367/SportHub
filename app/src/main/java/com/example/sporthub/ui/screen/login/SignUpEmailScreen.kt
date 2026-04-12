@@ -1,5 +1,7 @@
 package com.example.sporthub.ui.screen.login
 
+import android.util.Patterns
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,13 +26,16 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,7 +49,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.OffWhite
@@ -53,23 +57,29 @@ import com.example.sporthub.ui.theme.appleOrange
 import com.example.sporthub.ui.theme.applePink
 import com.example.sporthub.ui.theme.applePurple
 import com.example.sporthub.ui.theme.black
+import com.example.sporthub.ui.theme.colorError
 import com.example.sporthub.ui.theme.googleBlue
 import com.example.sporthub.ui.theme.googleGreen
 import com.example.sporthub.ui.theme.googleRed
 import com.example.sporthub.ui.theme.googleYellow
 import com.example.sporthub.ui.theme.gray
+import com.example.sporthub.ui.viewmodel.AuthState
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
+import kotlinx.coroutines.delay
 
 @Composable
 fun SignUpEmailScreen(
-    navController: NavController,
     loginViewModel: LoginViewModel,
-    emailState: MutableState<String>
+    navController: NavHostController,
+    emailState: MutableState<String>,
+    errorLogin: Boolean,
+    modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -77,8 +87,19 @@ fun SignUpEmailScreen(
 
     var openDialog by remember { mutableStateOf(false) }
 
+    val authState by loginViewModel.authState.collectAsState()
+
+    LaunchedEffect(authState) {
+        if(authState is AuthState.Success) {
+            navController.navigate("level_screen") {
+                popUpTo(0)
+            }
+        }
+    }
+
+
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
@@ -95,7 +116,7 @@ fun SignUpEmailScreen(
                 focusManager.clearFocus()
             }
             .statusBarsPadding()
-            .padding(horizontal = 28.dp)
+            .padding(horizontal = 20.dp)
             .padding(top = 70.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -145,8 +166,8 @@ fun SignUpEmailScreen(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = gray,
-                    unfocusedIndicatorColor = gray,
+                    focusedIndicatorColor = if(errorLogin) colorError else gray,
+                    unfocusedIndicatorColor = if(errorLogin) colorError else gray,
                     cursorColor = gray
                 ),
                 modifier = Modifier.fillMaxWidth(),
@@ -167,7 +188,9 @@ fun SignUpEmailScreen(
                 .fillMaxWidth()
                 .height(58.dp)
                 .clickable(
-                    onClick = { openDialog = !openDialog },
+                    onClick = {
+                        loginViewModel.signInGoogle()
+                    },
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
                 )
@@ -255,15 +278,38 @@ fun SignUpEmailScreen(
                 titleContentColor = Color.White,
             )
         }
+
+        Spacer(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .height(120.dp)
+        )
     }
 }
 
 @Composable
 fun SignUpEmailBottomBar(
+    loginViewModel: LoginViewModel,
     navController: NavHostController,
-    loginViewModel: LoginViewModel
 ) {
     val emailState = remember { mutableStateOf("") }
+
+    var errorLogin by remember { mutableStateOf(false) }
+    if(errorLogin) {
+        LaunchedEffect(Unit) {
+            delay(5000)
+            errorLogin = false
+
+        }
+    }
+
+    var isLoading by remember { mutableStateOf(false) }
+    if(isLoading) {
+        LaunchedEffect(Unit) {
+            delay(5000)
+            isLoading = false
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         val backdrop = rememberLayerBackdrop {
@@ -271,9 +317,11 @@ fun SignUpEmailBottomBar(
         }
 
         SignUpEmailScreen(
-            navController,
             loginViewModel,
-            emailState
+            navController,
+            emailState,
+            errorLogin,
+            modifier = Modifier.layerBackdrop(backdrop)
         )
 
         Row(
@@ -320,13 +368,20 @@ fun SignUpEmailBottomBar(
                     .height(58.dp)
                     .weight(1f)
                     .clickable(
+                        enabled = !isLoading,
                         onClick = {
-                            if(emailState.value.isNotBlank()) {
+                            if (emailState.value.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(
+                                    emailState.value.trim()
+                                ).matches()
+                            ) {
+                                isLoading = true
                                 val encodedEmail = java.net.URLEncoder.encode(
                                     emailState.value,
                                     java.nio.charset.StandardCharsets.UTF_8.toString()
                                 )
                                 navController.navigate("sign_up_password_screen/$encodedEmail")
+                            } else {
+                                errorLogin = true
                             }
                         },
                         indication = null,
@@ -338,12 +393,25 @@ fun SignUpEmailBottomBar(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Continue",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 18.sp
-                )
+                AnimatedContent(
+                    targetState = isLoading,
+                    label = "loading_animation",
+                ) { targetIsLoading ->
+                    if (targetIsLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Continue",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
             }
         }
     }

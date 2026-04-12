@@ -1,5 +1,6 @@
 package com.example.sporthub.ui.screen.login
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -59,6 +61,7 @@ import com.example.sporthub.ui.theme.appleOrange
 import com.example.sporthub.ui.theme.applePink
 import com.example.sporthub.ui.theme.applePurple
 import com.example.sporthub.ui.theme.black
+import com.example.sporthub.ui.theme.colorError
 import com.example.sporthub.ui.theme.googleBlue
 import com.example.sporthub.ui.theme.googleGreen
 import com.example.sporthub.ui.theme.googleRed
@@ -66,19 +69,24 @@ import com.example.sporthub.ui.theme.googleYellow
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.AuthState
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
+import kotlinx.coroutines.delay
 
 @Composable
 fun SignInScreen(
     navController: NavHostController,
     loginViewModel: LoginViewModel,
     emailState: MutableState<String>,
-    passwordState: MutableState<String>
+    passwordState: MutableState<String>,
+    errorLogin: Boolean,
+    modifier: Modifier = Modifier
 ) {
+
     var passwordVisibility by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
@@ -87,8 +95,11 @@ fun SignInScreen(
 
     var openDialog by remember { mutableStateOf(false) }
 
+    val authState by loginViewModel.authState.collectAsState()
+    val isLoading = authState is AuthState.Loading
+
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
@@ -105,7 +116,7 @@ fun SignInScreen(
                 focusManager.clearFocus()
             }
             .statusBarsPadding()
-            .padding(horizontal = 28.dp)
+            .padding(horizontal = 20.dp)
             .padding(top = 70.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -155,8 +166,8 @@ fun SignInScreen(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = gray,
-                    unfocusedIndicatorColor = gray,
+                    focusedIndicatorColor = if(errorLogin) colorError else gray,
+                    unfocusedIndicatorColor = if(errorLogin) colorError else gray,
                     cursorColor = gray
                 ),
                 modifier = Modifier.fillMaxWidth(),
@@ -197,8 +208,8 @@ fun SignInScreen(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = gray,
-                    unfocusedIndicatorColor = gray,
+                    focusedIndicatorColor = if(errorLogin) colorError else gray,
+                    unfocusedIndicatorColor = if(errorLogin) colorError else gray,
                     cursorColor = gray
                 ),
                 modifier = Modifier.fillMaxWidth(),
@@ -219,8 +230,9 @@ fun SignInScreen(
                 .fillMaxWidth()
                 .height(58.dp)
                 .clickable(
+                    enabled = !isLoading,
                     onClick = {
-                        openDialog = !openDialog
+                        loginViewModel.signInGoogle()
                     },
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
@@ -321,6 +333,12 @@ fun SignInScreen(
                 titleContentColor = Color.White,
             )
         }
+
+        Spacer(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .height(120.dp)
+        )
     }
 }
 
@@ -333,11 +351,21 @@ fun SignInBottomBar(
     val passwordState = remember { mutableStateOf("") }
     val authState by loginViewModel.authState.collectAsState()
     val isLoading = authState is AuthState.Loading
+
     LaunchedEffect(authState) {
         if(authState == AuthState.Success) {
             navController.navigate(loginViewModel.getStartScreen()) {
                 popUpTo(0)
             }
+        }
+    }
+
+    var errorLogin by remember { mutableStateOf(false) }
+    LaunchedEffect(authState) {
+        if(authState == AuthState.Error) {
+            errorLogin = true
+            delay(5000)
+            errorLogin = false
         }
     }
 
@@ -350,7 +378,9 @@ fun SignInBottomBar(
             navController,
             loginViewModel,
             emailState,
-            passwordState
+            passwordState,
+            errorLogin = errorLogin,
+            modifier = Modifier.layerBackdrop(backdrop)
         )
 
         Row(
@@ -412,12 +442,25 @@ fun SignInBottomBar(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Continue",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 18.sp
-                )
+                AnimatedContent(
+                    targetState = isLoading,
+                    label = "loading_animation",
+                ) { targetIsLoading ->
+                    if (targetIsLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Continue",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
             }
         }
     }

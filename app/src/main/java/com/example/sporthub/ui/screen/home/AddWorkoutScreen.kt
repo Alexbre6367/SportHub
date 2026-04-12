@@ -82,7 +82,6 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun AddWorkoutScreen(
-    navController: NavController,
     workoutViewModel: WorkoutViewModel,
     exercises: SnapshotStateList<ExerciseEntity>,
     modifier: Modifier = Modifier
@@ -204,7 +203,6 @@ fun AddWorkoutBar(
         }
 
         AddWorkoutScreen(
-            navController,
             workoutViewModel,
             exercises = exercises,
             modifier = Modifier.layerBackdrop(backdrop)
@@ -425,7 +423,7 @@ fun Exercises(
 ) {
     val exercise = exerciseEdit.body
     val repetitions = if (exerciseEdit.repetitions == 0) "" else exerciseEdit.repetitions.toString()
-    val approaches = if (exerciseEdit.approaches == 0) "" else exerciseEdit.approaches.toString()
+    val sets = if (exerciseEdit.sets == 0) "" else exerciseEdit.sets.toString()
     val kg = exerciseEdit.kg
 
     Column(
@@ -585,10 +583,10 @@ fun Exercises(
                     contentAlignment = Alignment.CenterStart
                 ) {
                     BasicTextField(
-                        value = if (exerciseEdit.approaches == 0) "" else exerciseEdit.approaches.toString(),
+                        value = if (exerciseEdit.sets == 0) "" else exerciseEdit.sets.toString(),
                         onValueChange = { newValue ->
                             if(newValue.length <= 3 && newValue.all { it.isDigit() }) {
-                                onUpdate(exerciseEdit.copy(approaches = newValue.toIntOrNull() ?: 0))
+                                onUpdate(exerciseEdit.copy(sets = newValue.toIntOrNull() ?: 0))
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -605,7 +603,7 @@ fun Exercises(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (approaches.isEmpty()) {
+                                if (sets.isEmpty()) {
                                     Text(
                                         "0",
                                         style = MaterialTheme.typography.titleLarge,

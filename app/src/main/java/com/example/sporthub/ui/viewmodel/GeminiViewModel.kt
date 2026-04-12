@@ -4,10 +4,10 @@ import android.app.Application
 import android.icu.util.Calendar
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sporthub.data.auth.SecureStorage
 import com.example.sporthub.data.repository.SportHubRepository
 import com.example.sporthub.data.sporthub.SportHubDatabase
 import com.example.sporthub.llm.Gemini
-import com.example.sporthub.util.SecureStorage
 import com.google.firebase.ai.type.Content
 import com.google.firebase.ai.type.content
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,7 +40,7 @@ class GeminiViewModel(application: Application) : AndroidViewModel(application) 
             try {
 
                 val userId = secureStorage.getUserId() ?: return@launch
-                val user = repository.getUser(userId) ?: return@launch
+                val user = repository.getUser(userId).first() ?: return@launch
 
                 val cal = Calendar.getInstance()
                 val dateId = (cal.get(java.util.Calendar.YEAR) * 10000 +

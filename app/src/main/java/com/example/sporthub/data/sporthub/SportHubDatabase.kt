@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
         WorkoutEntity::class,
         ExerciseEntity::class
     ],
-    version = 22,
+    version = 24,
     exportSchema = false
 )
 abstract class SportHubDatabase: RoomDatabase() {

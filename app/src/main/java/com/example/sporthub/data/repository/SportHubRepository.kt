@@ -25,7 +25,16 @@ class SportHubRepository(
         sportHubDao.addUser(user)
     }
 
-    suspend fun getUser(userId: String): User? {
+    suspend fun saveUserDaily(user: User) {
+        val cal = Calendar.getInstance()
+        val today = (cal.get(java.util.Calendar.YEAR) * 10000 +
+                (cal.get(java.util.Calendar.MONTH) + 1) * 100 +
+                cal.get(java.util.Calendar.DAY_OF_MONTH)).toLong()
+
+        sportHubDao.addUser(user.copy(date = today))
+    }
+
+    fun getUser(userId: String): Flow<User?> {
         return sportHubDao.getUser(userId)
     }
 
@@ -45,6 +54,10 @@ class SportHubRepository(
         } catch (e: Exception) {
             Log.e("MyLog", "Ошибка при удалении пользователя", e)
         }
+    }
+
+    fun getUserForWeek(startWeek: Long, endWeek: Long): Flow<List<User>> {
+        return sportHubDao.getUserWeek(startWeek, endWeek)
     }
 
     suspend fun saveHealth(steps: Long, sleep: Long, heart: Int, oxygen: Int, water: Int, calories: Energy) {

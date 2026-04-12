@@ -109,7 +109,7 @@ class HealthState(private val context: Context) {
         return response.records.firstOrNull()?.percentage?.value?.toInt() ?: 0
     }
 
-    suspend fun readCalories(steps: Long, weight: Float?): Energy {
+    suspend fun readCalories(steps: Long, weight: Int?): Energy {
         val startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0)
         val endOfDay = LocalDateTime.now()
 
@@ -129,11 +129,11 @@ class HealthState(private val context: Context) {
             if (calories != null && calories.inKilocalories > 0) {
                 calories
             } else {
-                calcCalories(steps, weight)
+                calcCalories(steps, weight?.toFloat())
             }
         } catch (e: Exception) {
             Log.d("MyLog", "Нет доступа к активности с устройства", e)
-            calcCalories(steps, weight)
+            calcCalories(steps, weight?.toFloat())
         }
     }
     

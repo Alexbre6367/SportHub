@@ -1,4 +1,4 @@
-package com.example.sporthub.util
+package com.example.sporthub.data.auth
 
 import android.content.Context
 import androidx.core.content.edit

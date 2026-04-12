@@ -19,21 +19,21 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.sporthub.ui.components.details.InputGlass
+import com.example.sporthub.ui.components.home.StrikeDay
 import com.example.sporthub.ui.screen.home.AccountGlassBottomBar
 import com.example.sporthub.ui.screen.home.AddWorkoutBar
 import com.example.sporthub.ui.screen.home.DeleteAccountBottomBar
 import com.example.sporthub.ui.screen.home.GeminiBar
-import com.example.sporthub.ui.screen.home.HomeGlassBottomBar
 import com.example.sporthub.ui.screen.home.SelectionTopBar
 import com.example.sporthub.ui.screen.home.TimerGlassBottomBar
 import com.example.sporthub.ui.screen.home.WorkoutGlassBottomBar
-import com.example.sporthub.ui.screen.login.DetailsScreen
 import com.example.sporthub.ui.screen.login.ForgotPasswordBottomBar
-import com.example.sporthub.ui.screen.login.LevelScreen
+import com.example.sporthub.ui.screen.login.LevelBottomBar
 import com.example.sporthub.ui.screen.login.SignInBottomBar
 import com.example.sporthub.ui.screen.login.SignUpEmailBottomBar
 import com.example.sporthub.ui.screen.login.SignUpPasswordBottomBar
-import com.example.sporthub.ui.screen.login.StartScreen
+import com.example.sporthub.ui.screen.login.StartBottomBar
 import com.example.sporthub.ui.screen.login.WelcomeScreen
 import com.example.sporthub.ui.viewmodel.GeminiViewModel
 import com.example.sporthub.ui.viewmodel.HomeViewModel
@@ -48,7 +48,8 @@ fun AppNavGraph(
     homeViewModel: HomeViewModel,
     timerViewModel: TimerViewModel,
     workoutViewModel: WorkoutViewModel,
-    geminiViewModel: GeminiViewModel
+    geminiViewModel: GeminiViewModel,
+
 ) {
     var startDestination by remember { mutableStateOf<String?>(null) }
     val userData by loginViewModel.currentUser.collectAsState()
@@ -73,15 +74,15 @@ fun AppNavGraph(
             popExitTransition = { ExitTransition.None }
         ) {
             composable(route = "level_screen") {
-                LevelScreen(
+                LevelBottomBar(
                     navController = navController,
                     loginViewModel
                 )
             }
 
             composable(route = "start_screen") {
-                StartScreen(
-                    navController = navController,
+                StartBottomBar(
+                    navController,
                     loginViewModel
                 )
             }
@@ -93,8 +94,8 @@ fun AppNavGraph(
             }
 
             composable(route = "details_up") {
-                DetailsScreen(
-                    navController = navController,
+                InputGlass(
+                    navController,
                     loginViewModel
                 )
             }
@@ -107,8 +108,8 @@ fun AppNavGraph(
 
             composable(route = "sign_up_email_screen") {
                 SignUpEmailBottomBar(
+                    loginViewModel,
                     navController = navController,
-                    loginViewModel = loginViewModel
                 )
             }
 
@@ -127,7 +128,7 @@ fun AppNavGraph(
             }
 
             composable(route = "home_screen") {
-                HomeGlassBottomBar(
+                StrikeDay(
                     navController = navController,
                     loginViewModel,
                     homeViewModel,
@@ -191,8 +192,8 @@ fun AppNavGraph(
                         loginViewModel
                     )
                 } else {
-                    StartScreen(
-                        navController = navController,
+                    StartBottomBar(
+                        navController,
                         loginViewModel
                     )
                 }

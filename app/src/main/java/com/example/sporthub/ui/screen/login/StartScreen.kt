@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -56,6 +57,7 @@ import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -64,22 +66,14 @@ import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun StartScreen(
-    navController: NavHostController,
-    loginViewModel: LoginViewModel
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    var selectedIndex by remember { mutableIntStateOf(1) }
-    val userData by loginViewModel.currentUser.collectAsState()
-
-    LaunchedEffect(userData) {
-        userData?.let {
-            if(selectedIndex == 1) selectedIndex = it.version
-        }
-    }
-
     val scrollState = rememberScrollState()
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
             .background(
@@ -257,7 +251,7 @@ fun StartScreen(
                         shape = RoundedCornerShape(24.dp)
                     )
                     .clickable (
-                        onClick = { selectedIndex = 1 },
+                        onClick = { onSelect(1) },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
                     )
@@ -329,7 +323,7 @@ fun StartScreen(
                         shape = RoundedCornerShape(24.dp)
                     )
                     .clickable (
-                        onClick = {selectedIndex = 2 },
+                        onClick = { onSelect(2) },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }
                     )
@@ -382,11 +376,49 @@ fun StartScreen(
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .height(120.dp)
+        )
+    }
+}
+
+@Composable
+fun StartBottomBar(
+    navController: NavHostController,
+    loginViewModel: LoginViewModel
+) {
+
+    var selectedIndex by remember { mutableIntStateOf(1) }
+    val userData by loginViewModel.currentUser.collectAsState()
+
+    LaunchedEffect(userData) {
+        userData?.let {
+            if (it.version == 1 || it.version == 2) {
+                selectedIndex = it.version
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        val backdrop = rememberLayerBackdrop {
+            drawContent()
+        }
+
+        StartScreen(
+            selectedIndex,
+            onSelect = { selectedIndex = it },
+            modifier = Modifier.layerBackdrop(backdrop)
+        )
+
         Row(
             modifier = Modifier
+                .navigationBarsPadding()
+                .imePadding()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
                 .fillMaxWidth()
-                .navigationBarsPadding(),
+                .align(Alignment.BottomCenter),
             horizontalArrangement = Arrangement.Center
         ) {
             Box(

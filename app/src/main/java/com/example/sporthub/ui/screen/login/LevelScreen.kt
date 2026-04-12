@@ -1,10 +1,10 @@
 package com.example.sporthub.ui.screen.login
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Chair
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -48,7 +50,9 @@ import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
+import com.example.sporthub.ui.viewmodel.AuthState
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -58,21 +62,14 @@ import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun LevelScreen(
-    navController: NavHostController,
-    loginViewModel: LoginViewModel
+    selectedIndex: Int,
+    onLevelSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    var selectedIndex by remember { mutableIntStateOf(-1) }
-    val userData by loginViewModel.currentUser.collectAsState()
     val scrollState = rememberScrollState()
 
-    LaunchedEffect(userData) {
-        userData?.let {
-            if(selectedIndex == -1) selectedIndex = it.level
-        }
-    }
-
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
             .background(
@@ -111,7 +108,7 @@ fun LevelScreen(
                     color = if (selectedIndex == 1) gray else Color.Transparent,
                     shape = RoundedCornerShape(24.dp)
                 )
-                .clickable { selectedIndex = 1 }
+                .clickable { onLevelSelected(1) }
         ) {
             Column(
                 modifier = Modifier
@@ -159,7 +156,7 @@ fun LevelScreen(
                     color = if (selectedIndex == 2) gray else Color.Transparent,
                     shape = RoundedCornerShape(24.dp)
                 )
-                .clickable { selectedIndex = 2 }
+                .clickable { onLevelSelected(2) }
         ) {
             Column(
                 modifier = Modifier
@@ -208,7 +205,7 @@ fun LevelScreen(
                     color = if (selectedIndex == 3) gray else Color.Transparent,
                     shape = RoundedCornerShape(24.dp)
                 )
-                .clickable { selectedIndex = 3 }
+                .clickable { onLevelSelected(3) }
         ) {
             Column(
                 modifier = Modifier
@@ -240,21 +237,63 @@ fun LevelScreen(
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .height(120.dp)
+        )
+    }
+}
+
+@Composable
+fun LevelBottomBar(
+    navController: NavHostController,
+    loginViewModel: LoginViewModel
+) {
+    var selectedIndex by remember { mutableIntStateOf(-1) }
+    val userData by loginViewModel.currentUser.collectAsState()
+
+    val authState by loginViewModel.authState.collectAsState()
+    val isLoading = authState is AuthState.Loading
+
+    LaunchedEffect(userData) {
+        userData?.let {
+            if(selectedIndex == -1) selectedIndex = it.level
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        val backdrop = rememberLayerBackdrop {
+            drawContent()
+        }
+
+        LevelScreen(
+            selectedIndex = selectedIndex,
+            onLevelSelected = { selectedIndex = it },
+            modifier = Modifier.layerBackdrop(backdrop)
+        )
+
         Row(
             modifier = Modifier
+                .navigationBarsPadding()
+                .imePadding()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
                 .fillMaxWidth()
-                .navigationBarsPadding(),
-            horizontalArrangement = Arrangement.Center
+                .align(Alignment.BottomCenter),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { CircleShape },
+                        effects = {
+                            vibrancy()
+                            blur(2f.dp.toPx())
+                            lens(16f.dp.toPx(), 32f.dp.toPx())
+                        }
+                    )
                     .size(58.dp)
-                    .drawBackdrop(backdrop = rememberLayerBackdrop(), shape = { CircleShape }, effects = {
-                        vibrancy()
-                        blur(2f.dp.toPx())
-                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                    })
                     .clickable(
                         onClick = {
                             navController.popBackStack()
@@ -274,10 +313,11 @@ fun LevelScreen(
 
             Box(
                 modifier = Modifier
+                    .padding(start = 12.dp)
                     .height(58.dp)
                     .weight(1f)
-                    .padding(start = 12.dp)
                     .clickable(
+                        enabled = !isLoading,
                         onClick = {
                             if(selectedIndex != -1) {
                                 loginViewModel.levelUser(selectedIndex)
@@ -288,18 +328,33 @@ fun LevelScreen(
                         interactionSource = remember { MutableInteractionSource() },
                     )
                     .background(
-                        color = if (selectedIndex != -1) black else black.copy(alpha = 0.5f),
+                        color = black,
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Continue",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 18.sp
-                )
+                AnimatedContent(
+                    targetState = isLoading,
+                    label = "loading_animation",
+                ) { targetIsLoading ->
+                    if (targetIsLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Continue",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
             }
         }
     }
 }
+
+

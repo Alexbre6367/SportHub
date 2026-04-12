@@ -39,14 +39,19 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -61,7 +66,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
+import com.example.sporthub.data.auth.authenticate
+import com.example.sporthub.ui.components.DialogScreen
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.LightGray
 import com.example.sporthub.ui.theme.OffWhite
@@ -69,6 +77,7 @@ import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.colorError
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.google.firebase.auth.FirebaseAuth
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
@@ -83,12 +92,16 @@ import java.util.Locale
 fun AccountScreen(
     navController: NavController,
     loginViewModel: LoginViewModel,
+    emailState: MutableState<String>,
     modifier: Modifier = Modifier,
+    onResend: () -> Unit = {},
 ) {
 
     LaunchedEffect(Unit) {
         loginViewModel.loadUserData()
     }
+
+    val auth = FirebaseAuth.getInstance()
 
     val userData by loginViewModel.currentUser.collectAsState()
     val scrollState = rememberScrollState()
@@ -116,6 +129,7 @@ fun AccountScreen(
     }
 
     val context = LocalContext.current
+    val activity = context as? FragmentActivity
 
     Column(
         modifier = modifier
@@ -256,7 +270,13 @@ fun AccountScreen(
                     .clickable(
                         enabled = !isResetPassword,
                         onClick = {
-                            loginViewModel.resetPassword(context)
+                            loginViewModel.resetPassword(
+                                context,
+                                onSuccess = {
+                                    emailState.value = auth.currentUser?.email ?: ""
+                                    onResend()
+                                }
+                            )
                         },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
@@ -551,9 +571,13 @@ fun AccountScreen(
                     )
                     .clickable(
                         onClick = {
-                            loginViewModel.signOut()
-                            navController.navigate("welcome_screen") {
-                                popUpTo(0)
+                            activity?.let { fragmentActivity ->
+                                authenticate(fragmentActivity) {
+                                    loginViewModel.signOut()
+                                    navController.navigate("welcome_screen") {
+                                        popUpTo(0)
+                                    }
+                                }
                             }
                         }
                     ),
@@ -609,21 +633,46 @@ fun AccountScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountGlassBottomBar(
     navController: NavController,
-    loginViewModel: LoginViewModel,
+    loginViewModel: LoginViewModel
 ) {
-    Box(Modifier.fillMaxSize()) {
+    val emailState = remember { mutableStateOf("") }
+    var dialogScreen by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
+    Box(modifier = Modifier.fillMaxSize()) {
         val backdrop = rememberLayerBackdrop {
             drawContent()
+        }
+
+        if(dialogScreen) {
+            ModalBottomSheet(
+                onDismissRequest = { dialogScreen = false },
+                sheetState = rememberModalBottomSheetState(),
+                containerColor = Color.White
+            ) {
+                DialogScreen(
+                    emailState,
+                    onResend = {
+                        loginViewModel.resetPassword(
+                            context,
+                            emailState.value,
+                            onSuccess = { dialogScreen = true })
+                    },
+                    onDismiss = { dialogScreen = false },
+                )
+            }
         }
         val userData by loginViewModel.currentUser.collectAsState()
 
         AccountScreen(
             navController,
             loginViewModel,
+            emailState,
+            onResend = { dialogScreen = true },
             modifier = Modifier.layerBackdrop(backdrop)
         )
 

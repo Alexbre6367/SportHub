@@ -6,32 +6,40 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.util.Log
-import android.util.Patterns
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sporthub.data.auth.GoogleAuth
+import com.example.sporthub.data.auth.SecureStorage
+import com.example.sporthub.data.repository.AuthRepository
 import com.example.sporthub.data.repository.SportHubRepository
 import com.example.sporthub.data.sporthub.SportHubDatabase
 import com.example.sporthub.data.sporthub.User
-import com.example.sporthub.util.SecureStorage
-import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import java.io.File
+import java.util.Calendar
 
 class LoginViewModel(application: Application) : AndroidViewModel(application){
     private val db = SportHubDatabase.getInstance(application)
-    private val repository = SportHubRepository(db.sportHubDao, db.healthDao, db.workoutDao)
+    private val sportHubRepository = SportHubRepository(db.sportHubDao, db.healthDao, db.workoutDao)
+    private val authRepository = AuthRepository(
+        FirebaseAuth.getInstance(),
+        FirebaseFirestore.getInstance(),
+        sportHubRepository,
+        SecureStorage.getInstance(application)
+    )
+
+    private val googleAuth = GoogleAuth(application)
     private val secureStorage = SecureStorage.getInstance(application)
     private val auth = FirebaseAuth.getInstance()
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState = _authState.asStateFlow()
-    private val firestore = FirebaseFirestore.getInstance()
-
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser = _currentUser.asStateFlow()
 
@@ -47,10 +55,13 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
     private val _loadedBitmap = MutableStateFlow<Bitmap?>(null)
     val loadedBitmap = _loadedBitmap.asStateFlow()
 
+    private val _isGoogleAccount = MutableStateFlow(false)
+    val isGoogleAccount = _isGoogleAccount.asStateFlow()
 
 
-    init { //данные доступны после создания viewModel(все переменные выше)
+    init {
         loadUserData()
+        _isGoogleAccount.value = authRepository.isGoogleUser()
 
         viewModelScope.launch {
             currentUser.collect { user ->
@@ -65,116 +76,74 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
         }
     }
 
-    private suspend fun syncUserToFirestore(user: User) {
-        val userMap = hashMapOf(
-            "userId" to user.userId,
-            "level" to user.level,
-            "name" to user.name,
-            "gender" to user.gender,
-            "weight" to user.weight,
-            "height" to user.height,
-            "birthdate" to user.birthdate,
-            "version" to user.version,
-            "select" to user.select,
-        )
-
-        firestore.collection("users")
-            .document(user.userId)
-            .set(userMap)
-            .await()
-
-        Log.d("MyLog", "Данные синхронизированы с Firestore для userId: ${user.userId}")
-    }
-
-    private suspend fun loadUserFromFirestore(userId: String): User? {
-        return try {
-            val document = firestore.collection("users")
-                .document(userId)
-                .get()
-                .await()
-
-            if(document.exists()) {
-                User(
-                    userId = document.getString("userId") ?: userId,
-                    level = document.getLong("level")?.toInt() ?: 0,
-                    name = document.getString("name") ?: "",
-                    gender = document.getString("gender") ?: "",
-                    weight = document.getDouble("weight")?.toFloat() ?: 0f,
-                    height = document.getLong("height")?.toInt() ?: 0,
-                    birthdate = document.getLong("birthdate") ?: 0L,
-                    version = document.getLong("version")?.toInt() ?: 0,
-                    select = document.getBoolean("select") ?: false,
-                )
-            } else {
-                null
+    fun loadUserData() {
+        viewModelScope.launch {
+            val uid = secureStorage.getUserId()
+            if(uid != null) {
+                sportHubRepository.getUser(uid).collect { user ->
+                    _currentUser.value = user
+                }
             }
-        } catch (e: Exception) {
-            Log.e("MyLog", "Ошибка загрузки из Firestore", e)
-            null
         }
     }
+
     fun signIn(email: String, password: String) {
         viewModelScope.launch {
+            _authState.value = AuthState.Loading
             try {
-                _authState.value = AuthState.Loading
-                val result = auth.signInWithEmailAndPassword(email, password).await()
-                val user = result.user
-
-                if (user != null) {
-                    val firestoreUser = loadUserFromFirestore(user.uid)
-
-                    if(firestoreUser != null) {
-                        secureStorage.saveUserId(user.uid)
-                        val localUser = repository.getUser(user.uid)
-                        val userToSave = firestoreUser.copy(uri = localUser?.uri ?: "")
-                        repository.addUser(userToSave)
-                        _authState.value = AuthState.Success
-                        Log.d("MyLog", "Данные загружены из Firestore")
-                    } else {
-                        auth.signOut()
-                    }
-
-                    _authState.value = AuthState.Success
-                    Log.d("MyLog", "Пользователь вошёл $email")
-                } else {
-                   Log.e("MyLog", "Не удалось войти")
-                }
-            } catch (e: Exception) {
-                Log.e("MyLog", "Ошибка входа", e)
-            }
-        }
-    }
-
-    private fun isValidEmail(email: String): Boolean {
-        return email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    }
-
-    fun signUp(email: String, password: String) {
-        if(!isValidEmail(email)) {
-            return
-        }
-        viewModelScope.launch {
-            try {
-                _authState.value = AuthState.Loading
-
-                val result = auth.createUserWithEmailAndPassword(email, password).await()
-                val user = result.user
-
+                val user = authRepository.signInEmail(email, password)
                 if(user != null) {
-                    val newUser = User(
-                        userId = user.uid
-                    )
-                    syncUserToFirestore(newUser)
-                    repository.addUser(newUser)
-                    secureStorage.saveUserId(user.uid)
+                    _currentUser.value = user
                     _authState.value = AuthState.Success
-                    Log.d("MyLog", "Пользователь зарегистрирован $email")
+                    Log.e("MyLog", "Пользователь авторизовался через Email $email")
                 } else {
-                    Log.e("MyLog", "Не удалось зарегистрироваться")
+                    _authState.value = AuthState.Error
                 }
             } catch (e: Exception) {
                 _authState.value = AuthState.Error
-                Log.e("MyLog", "Ошибка регистрации", e)
+            }
+        }
+    }
+
+    fun signInGoogle() {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            val idToken = googleAuth.getGoogleIdToken()
+
+            if(idToken != null) {
+                try {
+                    val user = authRepository.signInGoogle(idToken)
+                    if(user != null) {
+                        _currentUser.value = user
+                        _authState.value = AuthState.Success
+                        _isGoogleAccount.value = false
+                        Log.e("MyLog", "Пользователь авторизовался через Google")
+                    } else {
+                        _authState.value = AuthState.Error
+                    }
+                } catch (e: Exception) {
+                    _authState.value = AuthState.Error
+                }
+            } else {
+                _authState.value = AuthState.Error
+            }
+        }
+    }
+
+
+    fun signUp(email: String, password: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                val user = authRepository.signUpEmail(email, password)
+                if (user != null) {
+                    _currentUser.value = user
+                    _authState.value = AuthState.Success
+                } else {
+                    _authState.value = AuthState.Error
+                }
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error
             }
         }
     }
@@ -183,21 +152,21 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
         viewModelScope.launch {
             val uid = secureStorage.getUserId() ?: return@launch
 
-            val currentUser = repository.getUser(uid)
+            val currentUser = sportHubRepository.getUser(uid).first()
             if (currentUser != null) {
                 val updatedUser = currentUser.copy(level = level)
-                repository.updateUser(updatedUser)
-                syncUserToFirestore(updatedUser)
+                sportHubRepository.updateUser(updatedUser)
+                authRepository.syncUserToFirestore(updatedUser)
                 Log.d("MyLog", "Уровень сохранен: $level")
             }
         }
     }
 
-    fun detailsUser(name: String, gender: String, weight: Float, height: Int, birthdate: Long) {
+    fun detailsUser(name: String, gender: String, weight: Int, height: Int, birthdate: Long) {
         viewModelScope.launch {
             val uid = secureStorage.getUserId() ?: return@launch
 
-            val currentUser = repository.getUser(uid)
+            val currentUser = sportHubRepository.getUser(uid).first()
             if (currentUser != null) {
                 val updatedUser = currentUser.copy(
                     name = name,
@@ -206,8 +175,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
                     height = height,
                     birthdate = birthdate
                 )
-                repository.updateUser(updatedUser)
-                syncUserToFirestore(updatedUser)
+                sportHubRepository.updateUser(updatedUser)
+                authRepository.syncUserToFirestore(updatedUser)
                 Log.d("MyLog", "Все данные сохранены")
             }
         }
@@ -218,10 +187,10 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
             _isUpdateVersion.value = true
             val uid = secureStorage.getUserId() ?: return@launch
 
-            val currentUser = repository.getUser(uid) ?: User(userId = uid)
+            val currentUser = sportHubRepository.getUser(uid).first() ?: User(userId = uid, date = authRepository.getDayId(Calendar.getInstance()))
             val updatedUser = currentUser.copy(version = selectedIndex)
-            repository.updateUser(updatedUser)
-            syncUserToFirestore(updatedUser)
+            sportHubRepository.updateUser(updatedUser)
+            authRepository.syncUserToFirestore(updatedUser)
             Log.d("MyLog", "Версия сохранена: $selectedIndex для пользователя $uid")
             loadUserData()
             _isUpdateVersion.value = false
@@ -232,12 +201,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
     suspend fun getStartScreen(): String {
         val firebaseUser = auth.currentUser ?: return "welcome_screen"
         val userId = firebaseUser.uid
-        var user = repository.getUser(userId)
+        var user = sportHubRepository.getUser(userId).first()
 
         if (user == null) {
-            val firestoreUser = loadUserFromFirestore(userId)
+            val firestoreUser = authRepository.loadUserFromFirestore(userId)
             if(firestoreUser != null) {
-                repository.addUser(firestoreUser)
+                sportHubRepository.addUser(firestoreUser)
                 user = firestoreUser
                 Log.d("MyLog", "Пользователь востановлен из Firestore")
             } else {
@@ -252,7 +221,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
         val hasPersonalDetails = user.name.isNotEmpty() && user.gender.isNotEmpty() &&
                 user.weight > 0f &&
                 user.height > 0 &&
-                user.birthdate > 0L
+                user.birthdate != 0L
 
         if(!hasPersonalDetails) return "details_up"
 
@@ -262,20 +231,11 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
         return "home_screen"
     }
 
-    fun loadUserData() {
-        viewModelScope.launch {
-            val uid = secureStorage.getUserId()
-            if(uid != null) {
-                _currentUser.value = repository.getUser(uid)
-            }
-        }
-    }
-
     private fun saveImageToInternalStorage(uri: Uri): String? {
         return try {
             val context = getApplication<Application>()
             val fileName = "profile_image_${System.currentTimeMillis()}.jpg"
-            val file = java.io.File(context.filesDir, fileName)
+            val file = File(context.filesDir, fileName)
 
             val source = ImageDecoder.createSource(context.contentResolver, uri)
             val bitmap = ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
@@ -299,7 +259,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
                 val context = getApplication<Application>()
 
                 val actualUri = if (uri.scheme == null) {
-                    val file = java.io.File(context.filesDir, uri.toString())
+                    val file = File(context.filesDir, uri.toString())
                     Uri.fromFile(file)
                 } else {
                     uri
@@ -320,7 +280,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
         viewModelScope.launch {
             try {
                 val uid = secureStorage.getUserId() ?: return@launch
-                val userFromDb = repository.getUser(uid) ?: return@launch
+                val userFromDb = sportHubRepository.getUser(uid).first() ?: return@launch
 
                 if (!userFromDb.uri.isNullOrEmpty()) {
                     deleteOldImage(userFromDb.uri)
@@ -330,7 +290,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
 
                 if (fileName != null) {
                     val updatedUser = userFromDb.copy(uri = fileName)
-                    repository.updateUser(updatedUser)
+                    sportHubRepository.updateUser(updatedUser)
                     _currentUser.value = updatedUser
 
                     loadBitmapFromUri(fileName.toUri())
@@ -346,7 +306,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
     private fun deleteOldImage(fileName: String) {
         try {
             val context = getApplication<Application>()
-            val file = java.io.File(context.filesDir, fileName)
+            val file = File(context.filesDir, fileName)
             if (file.exists()) {
                 file.delete()
                 Log.d("MyLog", "Старое изображение удалено")
@@ -359,11 +319,11 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
     fun selectionWorkout() {
         viewModelScope.launch {
             val uid = secureStorage.getUserId() ?: return@launch
-            val currentUser = repository.getUser(uid)
+            val currentUser = sportHubRepository.getUser(uid).first()
             if(currentUser != null) {
                 val updatedUser = currentUser.copy(select = true)
-                repository.updateUser(updatedUser)
-                syncUserToFirestore(updatedUser)
+                sportHubRepository.updateUser(updatedUser)
+                authRepository.syncUserToFirestore(updatedUser)
                 _currentUser.value = updatedUser
             }
         }
@@ -371,47 +331,47 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
 
     fun signOut() {
         viewModelScope.launch {
-            try {
-                auth.signOut()
-                secureStorage.saveUserId("")
+            authRepository.signOut()
+            googleAuth.signOut()
+
+            _isGoogleAccount.value = false
+            _currentUser.value = null
+            _authState.value = AuthState.Idle
+            Log.d("MyLog", "Пользователь вышел из аккаунта")
+        }
+    }
+
+    fun deleteAccount(password: String?, onSuccess: () -> Unit, onError: () -> Unit) {
+        viewModelScope.launch {
+            _isDelete.value = true
+            _authState.value = AuthState.Loading
+
+            val isDelete = if (password != null) {
+                authRepository.deleteAccountEmail(password)
+            } else {
+                val idToken = googleAuth.getGoogleIdToken()
+                if (idToken != null) {
+                    authRepository.deleteAccountGoogle(idToken)
+                } else {
+                    false
+                }
+            }
+
+            if(isDelete) {
                 _currentUser.value = null
                 _authState.value = AuthState.Idle
-                Log.d("MyLog", "Пользователь вышел из аккаунта")
-            } catch (e: Exception) {
-                Log.e("MyLog", "Ошибка выхода", e)
-            }
-        }
-    }
-
-    fun deleteAccount(password: String, onSuccess: () -> Unit) {
-        val user = auth.currentUser ?: return
-        val email = user.email ?: return
-        val credential = EmailAuthProvider.getCredential(email, password)
-
-        _isDelete.value = true
-        _authState.value = AuthState.Loading
-        user.reauthenticate(credential).addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                viewModelScope.launch {
-                    try {
-                        repository.deleteUser(user.uid)
-                        user.delete().await()
-                        secureStorage.clearUserId()
-                        _currentUser.value = null
-                        _authState.value = AuthState.Idle
-                        onSuccess()
-                    } catch (e: Exception) {
-                        _isDelete.value = false
-                        Log.e("MyLog", "Ошибка удаления аккаунта", e)
-                    }
-                }
+                onSuccess()
+                Log.d("MyLog", "Пользователь удален")
             } else {
-                _isDelete.value = false
+                _authState.value = AuthState.Error
+                onError()
             }
+
+            _isDelete.value = false
         }
     }
 
-    fun resetPassword(context: Context, email: String? = null) {
+    fun resetPassword(context: Context, email: String? = null, onSuccess: () -> Unit) {
         val targetEmail = if(!email.isNullOrBlank()) {
             email
         } else {
@@ -429,6 +389,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
                         Toast.LENGTH_LONG
                     ).show()
                     _isResetPassword.value = false
+                    onSuccess()
                 } else {
                     Toast.makeText(
                         context,

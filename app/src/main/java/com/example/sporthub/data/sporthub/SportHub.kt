@@ -8,13 +8,14 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 
 @Keep
-@Entity(tableName = "user_table")
+@Entity(tableName = "user_table", primaryKeys = ["userId", "date"])
 data class User(
-    @PrimaryKey val userId: String,
+    val userId: String,
+    val date: Long,
     val level: Int = 0,
     val name: String = "",
     val gender: String = "",
-    val weight: Float = 0f,
+    val weight: Int = 0,
     val height: Int = 0,
     val birthdate: Long = 0L,
     val version: Int = 0,
@@ -56,7 +57,7 @@ data class ExerciseEntity(
     val workoutOwnerId: Int,
     val body: String = "",
     val repetitions: Int = 0,
-    val approaches: Int = 0,
+    val sets: Int = 0,
     val kg: String = ""
 )
 
