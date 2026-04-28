@@ -367,7 +367,7 @@ fun TimerGlassBottomBar(
                         .weight(1f)
                         .fillMaxHeight()
                         .clickable {
-                            navController.navigate("home_screen")
+                            navController.navigate("home_screen/0")
                         },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
@@ -393,7 +393,7 @@ fun TimerGlassBottomBar(
                         .clickable(
                             onClick = {
                                 if (userData?.select == true) {
-                                    navController.navigate("workout_screen")
+                                    navController.navigate("home_screen/1")
                                 } else {
                                     navController.navigate("selection_screen")
                                 }

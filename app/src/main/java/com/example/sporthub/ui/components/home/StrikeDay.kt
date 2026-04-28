@@ -38,13 +38,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.sporthub.ui.components.MainBottomBar
 import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.HomeViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.example.sporthub.ui.viewmodel.TimerViewModel
-import com.kyant.backdrop.backdrops.layerBackdrop
+import com.example.sporthub.ui.viewmodel.WorkoutViewModel
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -56,7 +57,9 @@ fun StrikeDay(
     navController: NavHostController,
     loginViewModel: LoginViewModel,
     homeViewModel: HomeViewModel,
-    timerViewModel: TimerViewModel
+    timerViewModel: TimerViewModel,
+    workoutViewModel: WorkoutViewModel,
+    screenIndex: Int = 0
 ) {
     var strikeDay by remember { mutableStateOf(false) }
     val userData by loginViewModel.currentUser.collectAsState()
@@ -78,13 +81,15 @@ fun StrikeDay(
             drawContent()
         }
 
-        HomeBottomBar(
+        MainBottomBar(
             navController,
             loginViewModel,
             homeViewModel,
             timerViewModel,
-            onStrike = { strikeDay = true },
-            modifier = Modifier.layerBackdrop(backdrop)
+            workoutViewModel,
+            backdrop = backdrop,
+            screenIndex = screenIndex,
+            onStrike = { strikeDay = true},
         )
 
         if(strikeDay) {

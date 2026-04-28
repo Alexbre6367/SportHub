@@ -76,6 +76,7 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun SignInScreen(
@@ -364,7 +365,7 @@ fun SignInBottomBar(
     LaunchedEffect(authState) {
         if(authState == AuthState.Error) {
             errorLogin = true
-            delay(5000)
+            delay(5000.milliseconds)
             errorLogin = false
         }
     }

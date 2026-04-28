@@ -1,7 +1,10 @@
 package com.example.sporthub.ui.screen.home
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -27,12 +30,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,10 +47,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextAlign
@@ -52,12 +60,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.sporthub.ui.components.MessageBox
+import com.example.sporthub.ui.components.chat.EmptyStateGemini
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.OffWhite
-import com.example.sporthub.ui.theme.appleBlue
-import com.example.sporthub.ui.theme.appleOrange
-import com.example.sporthub.ui.theme.applePink
-import com.example.sporthub.ui.theme.applePurple
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.GeminiViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
@@ -71,7 +76,6 @@ import com.kyant.backdrop.effects.vibrancy
 @Composable
 fun GeminiScreen(
     geminiViewModel: GeminiViewModel,
-    navController: NavController,
     loginViewModel: LoginViewModel,
     modifier: Modifier = Modifier,
 ) {
@@ -96,7 +100,7 @@ fun GeminiScreen(
                     colors = listOf(LightBlue, OffWhite), startY = 0f, endY = 1500f
                 )
             )
-            .clickable (
+            .clickable(
                 onClick = {
                     focusManager.clearFocus()
                     keyboardController?.hide()
@@ -104,7 +108,6 @@ fun GeminiScreen(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             )
-            .padding(horizontal = 20.dp)
     ) {
         if(message.isEmpty()) {
             EmptyStateGemini(
@@ -114,7 +117,9 @@ fun GeminiScreen(
         } else {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 20.dp),
                 contentPadding = PaddingValues(
                     top =  129.dp,
                     bottom = 120.dp
@@ -146,6 +151,22 @@ fun GeminiBar(
     navController: NavController,
     loginViewModel: LoginViewModel
 ) {
+    DisposableEffect(Unit) {
+        onDispose {
+            geminiViewModel.clearFile()
+        }
+    }
+
+    val loadedBitmap by geminiViewModel.loadedBitmap.collectAsState()
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { nonNullUri ->
+            geminiViewModel.attachedFile(nonNullUri)
+        }
+    }
+
+
     var promptText by remember { mutableStateOf("") }
     val isLoading by geminiViewModel.isLoading.collectAsState()
 
@@ -156,7 +177,6 @@ fun GeminiBar(
 
         GeminiScreen(
             geminiViewModel,
-            navController,
             loginViewModel,
             modifier = Modifier.layerBackdrop(backdrop)
         )
@@ -234,223 +254,188 @@ fun GeminiBar(
             }
         }
 
-        Row(
+        Column(
             modifier = Modifier
                 .navigationBarsPadding()
-                .imePadding()
                 .padding(horizontal = 20.dp, vertical = 12.dp)
+                .imePadding()
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            verticalAlignment = Alignment.CenterVertically
+                .align(Alignment.BottomCenter)
         ) {
-            Box(
-                modifier = Modifier
-                    .heightIn(min = 58.dp)
-                    .weight(1f)
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        },
-                        onDrawSurface = {
-                            drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                            drawRect(OffWhite.copy(alpha = 0.5f))
-                        }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                BasicTextField(
-                    value = promptText,
-                    onValueChange = { promptText = it },
+            if(loadedBitmap != null) {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 10.dp),
-                    textStyle = MaterialTheme.typography.titleLarge.copy(
-                        fontSize = 18.sp,
-                        color = gray,
-                    ),
-                    maxLines = 5,
-                    cursorBrush = SolidColor(gray),
-                    decorationBox = { innerTextField ->
-                        Box(
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            if (promptText.isEmpty()) {
-                                Text(
-                                    "Type something..",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontSize = 18.sp,
-                                    color = gray
-                                )
+                        .width(116.dp)
+                        .height(58.dp)
+                        .drawBackdrop(
+                            backdrop = backdrop,
+                            shape = { CircleShape },
+                            effects = {
+                                vibrancy()
+                                blur(2f.dp.toPx())
+                                lens(16f.dp.toPx(), 32f.dp.toPx())
+                            },
+                            onDrawSurface = {
+                                drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
+                                drawRect(OffWhite.copy(alpha = 0.5f))
                             }
-                            innerTextField()
-                        }
-                    }
-                )
-            }
-
-            Spacer(Modifier.width(12.dp))
-            Box(
-                modifier = Modifier
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        },
-                        onDrawSurface = {
-                            drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                            drawRect(OffWhite.copy(alpha = 0.5f))
-                        }
-                    )
-                    .size(58.dp)
-                    .clickable(
-                        onClick = {
-                            if(promptText.isNotBlank()) {
-                                geminiViewModel.message(promptText)
-                                promptText = "" //очистка
-                            }
-                        },
-                        enabled = !isLoading,
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowUpward,
-                    contentDescription = null,
-                    tint = gray,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun EmptyStateGemini(
-    loginViewModel: LoginViewModel,
-    geminiViewModel: GeminiViewModel
-) {
-    val isLoading by geminiViewModel.isLoading.collectAsState()
-    val userData = loginViewModel.currentUser.collectAsState()
-    val boxModifier = Modifier
-        .height(46.dp)
-        .border(
-            1.dp,
-            gray,
-            shape = CircleShape
-        )
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer{ translationY = -size.height * 0.15f },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = "Hello, ${userData.value?.name}",
-                textAlign = TextAlign.Start,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            appleBlue,
-                            applePurple,
-                            applePink,
-                            appleOrange
                         )
+                        .padding(4.dp)
+                        .align(Alignment.Start),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        bitmap = loadedBitmap!!.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        contentScale = ContentScale.Crop
                     )
-                ),
-                fontSize = 36.sp
-            )
-            Text(
-                text = "How can I help you today?",
-                color = gray,
-                textAlign = TextAlign.Start,
-                style = MaterialTheme.typography.titleLarge,
-                fontSize = 24.sp
-            )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            Row(verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .heightIn(min = 58.dp)
+                        .weight(1f)
+                        .drawBackdrop(
+                            backdrop = backdrop,
+                            shape = { CircleShape },
+                            effects = {
+                                vibrancy()
+                                blur(2f.dp.toPx())
+                                lens(16f.dp.toPx(), 32f.dp.toPx())
+                            },
+                            onDrawSurface = {
+                                drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
+                                drawRect(OffWhite.copy(alpha = 0.5f))
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    BasicTextField(
+                        value = promptText,
+                        onValueChange = { promptText = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp)
+                            .padding(start = 10.dp, end = 20.dp),
+                        textStyle = MaterialTheme.typography.titleLarge.copy(
+                            fontSize = 18.sp,
+                            color = gray,
+                            textAlign = TextAlign.Start
+                        ),
+                        maxLines = 5,
+                        cursorBrush = SolidColor(gray),
+                        decorationBox = { innerTextField ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Start
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .drawBackdrop(
+                                            backdrop = backdrop,
+                                            shape = { CircleShape },
+                                            effects = {
+                                                vibrancy()
+                                                blur(2f.dp.toPx())
+                                                lens(16f.dp.toPx(), 32f.dp.toPx())
+                                            },
+                                            onDrawSurface = {
+                                                drawRect(
+                                                    OffWhite,
+                                                    alpha = 0.4f,
+                                                    blendMode = BlendMode.Overlay
+                                                )
+                                                drawRect(OffWhite.copy(alpha = 0.5f))
+                                            }
+                                        )
+                                        .clickable(
+                                            onClick = {
+                                                if(loadedBitmap != null) {
+                                                    geminiViewModel.clearFile()
+                                                } else {
+                                                    launcher.launch("image/*")
+                                                }
+                                            },
+                                            indication = null,
+                                            interactionSource = remember { MutableInteractionSource() }
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if(loadedBitmap != null) {
+                                        Icon(
+                                            Icons.Default.Clear,
+                                            contentDescription = null,
+                                            tint = gray
+                                        )
+                                    } else {
+                                        Icon(
+                                            Icons.Default.Add,
+                                            contentDescription = null,
+                                            tint = gray
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.width(10.dp))
+                                if (promptText.isEmpty()) {
+                                    Text(
+                                        "Type something..",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontSize = 18.sp,
+                                        color = gray,
+                                    )
+                                }
+
+                                innerTextField()
+                            }
+                        }
+                    )
+                }
+
+                Spacer(Modifier.width(12.dp))
+                Box(
+                    modifier = Modifier
+                        .drawBackdrop(
+                            backdrop = backdrop,
+                            shape = { CircleShape },
+                            effects = {
+                                vibrancy()
+                                blur(2f.dp.toPx())
+                                lens(16f.dp.toPx(), 32f.dp.toPx())
+                            },
+                            onDrawSurface = {
+                                drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
+                                drawRect(OffWhite.copy(alpha = 0.5f))
+                            }
+                        )
+                        .size(58.dp)
+                        .clickable(
+                            onClick = {
+                                if (promptText.isNotBlank()) {
+                                    geminiViewModel.message(promptText)
+                                    promptText = "" //очистка
+                                    geminiViewModel.clearFile()
+                                }
+                            },
+                            enabled = !isLoading,
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() },
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowUpward,
+                        contentDescription = null,
+                        tint = gray,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
         }
-
-        Spacer(Modifier.height(12.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp)
-        ) {
-            Box(
-                modifier = boxModifier
-                    .weight(1f)
-                    .clickable(
-                        enabled = !isLoading,
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    ) {
-                        geminiViewModel.message("Все показатели здоровья пользователя")
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Health",
-                    color = gray,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 16.sp
-                )
-            }
-
-            Spacer(Modifier.width(12.dp))
-            Box(
-                modifier = boxModifier
-                    .weight(1f)
-                    .clickable(
-                        enabled = !isLoading,
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    ) {
-                        geminiViewModel.message("План пиатния на день")
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Nutrition",
-                    color = gray,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 16.sp
-                )
-            }
-
-            Spacer(Modifier.width(12.dp))
-            Box(
-                modifier = boxModifier
-                    .weight(1f)
-                    .clickable(
-                        enabled = !isLoading,
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    ) {
-                        geminiViewModel.message("Легкая тренировка")
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Workout",
-                    color = gray,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 16.sp
-                )
-            }
-        }
-
     }
 }

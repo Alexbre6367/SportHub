@@ -1,13 +1,16 @@
 package com.example.sporthub.ui.viewmodel
 
 import android.app.Application
+import android.graphics.Bitmap
 import android.icu.util.Calendar
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sporthub.data.auth.SecureStorage
 import com.example.sporthub.data.repository.SportHubRepository
 import com.example.sporthub.data.sporthub.SportHubDatabase
 import com.example.sporthub.llm.Gemini
+import com.example.sporthub.utils.toBitmap
 import com.google.firebase.ai.type.Content
 import com.google.firebase.ai.type.content
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +35,8 @@ class GeminiViewModel(application: Application) : AndroidViewModel(application) 
     private var _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    private val _loadedBitmap = MutableStateFlow<Bitmap?>(null)
+    val loadedBitmap = _loadedBitmap.asStateFlow()
 
     fun message(text: String) {
         _messages.value += ChatMessage(text, true)
@@ -73,5 +78,16 @@ class GeminiViewModel(application: Application) : AndroidViewModel(application) 
                 _isLoading.value = false
             }
         }
+    }
+
+    fun attachedFile(uri: Uri) {
+        viewModelScope.launch {
+            val bitmap = uri.toBitmap(getApplication())
+            _loadedBitmap.value = bitmap
+        }
+    }
+
+    fun clearFile() {
+        _loadedBitmap.value = null
     }
 }

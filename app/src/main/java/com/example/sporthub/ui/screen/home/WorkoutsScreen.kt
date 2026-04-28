@@ -1,5 +1,6 @@
 package com.example.sporthub.ui.screen.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,12 +10,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,16 +23,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.SportsGymnastics
 import androidx.compose.material.icons.filled.SportsHandball
 import androidx.compose.material.icons.filled.SportsMartialArts
 import androidx.compose.material.icons.filled.SportsTennis
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -63,12 +59,6 @@ import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.example.sporthub.ui.viewmodel.WorkoutViewModel
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -81,6 +71,10 @@ fun ChoiceWorkoutsScreen(
     modifier: Modifier = Modifier
 ) {
     val workouts by workoutViewModel.workoutList.observeAsState(initial = emptyList())
+
+    BackHandler{
+        navController.navigate("home_screen/0")
+    }
 
     Column(
         modifier = modifier
@@ -218,7 +212,7 @@ fun WorkoutTopAppBar(
             Box(
                 modifier = Modifier
                     .height(40.dp)
-                    .width(40.dp)
+                    .width(60.dp)
                     .shadow(
                         elevation = 8.dp,
                         shape = RoundedCornerShape(16.dp),
@@ -227,13 +221,13 @@ fun WorkoutTopAppBar(
                     )
                     .background(color = Color.Black, shape = RoundedCornerShape(16.dp))
                     .clickable(
-                        onClick = { navController.navigate("timer_screen") },
+                        onClick = {  },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    Icons.Outlined.Timer,
+                    Icons.Outlined.PlayArrow,
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(22.dp)
@@ -288,135 +282,6 @@ fun WorkoutItem(
             tint = black,
             contentDescription = null
         )
-    }
-}
-
-
-@Composable
-fun WorkoutGlassBottomBar(
-    navController: NavController,
-    loginViewModel: LoginViewModel,
-    workoutViewModel: WorkoutViewModel
-) {
-    Box(Modifier.fillMaxSize()) {
-
-        val backdrop = rememberLayerBackdrop {
-            drawContent()
-        }
-
-        ChoiceWorkoutsScreen(
-            navController,
-            loginViewModel,
-            workoutViewModel = workoutViewModel,
-            modifier = Modifier.layerBackdrop(backdrop)
-        )
-
-        Row(
-            modifier = Modifier
-                .navigationBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-                .height(58.dp)
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                modifier = Modifier
-                    .drawBackdrop(backdrop = backdrop, shape = { CircleShape }, effects = {
-                        vibrancy()
-                        blur(2f.dp.toPx())
-                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                    })
-                    .width(200.dp)
-                    .fillMaxHeight()
-                    .padding(4.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable {
-                            navController.navigate("home_screen")
-                        },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        Icons.Default.Home,
-                        contentDescription = null,
-                        tint = LightGray,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = "Home",
-                        color = LightGray,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontSize = 14.sp,
-                    )
-                }
-
-                Column(
-                    modifier = Modifier
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { CircleShape },
-                            effects = {
-                                vibrancy()
-                                blur(2f.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            }
-                        )
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        Icons.Default.FitnessCenter,
-                        contentDescription = null,
-                        tint = black,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = "Workout",
-                        color = black,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontSize = 14.sp,
-                    )
-                }
-            }
-
-            Column(
-                modifier = Modifier
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        }
-                    )
-                    .clickable{ navController.navigate("gemini_screen") }
-                    .aspectRatio(1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Default.Chat,
-                    contentDescription = null,
-                    tint = LightGray,
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = "Chat",
-                    color = LightGray,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 14.sp,
-                )
-            }
-        }
     }
 }
 

@@ -103,6 +103,7 @@ fun AccountScreen(
 
     val auth = FirebaseAuth.getInstance()
 
+    val context = LocalContext.current
     val userData by loginViewModel.currentUser.collectAsState()
     val scrollState = rememberScrollState()
     val nameScrollState = rememberScrollState()
@@ -124,11 +125,10 @@ fun AccountScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let { nonNullUri ->
-            loginViewModel.imageUri(nonNullUri)
+            loginViewModel.imageUri(nonNullUri, context)
         }
     }
 
-    val context = LocalContext.current
     val activity = context as? FragmentActivity
 
     Column(
@@ -706,7 +706,7 @@ fun AccountGlassBottomBar(
                         .weight(1f)
                         .fillMaxHeight()
                         .clickable {
-                            navController.navigate("home_screen")
+                            navController.navigate("home_screen/0")
                         },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
@@ -731,7 +731,7 @@ fun AccountGlassBottomBar(
                         .fillMaxHeight()
                         .clickable(onClick = {
                             if(userData?.select == true) {
-                                navController.navigate("workout_screen")
+                                navController.navigate("home_screen/1")
                             } else{
                                 navController.navigate("selection_screen")
                             }

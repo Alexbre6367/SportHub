@@ -130,7 +130,6 @@ fun SelectionTopBar(
 
     val value by animateFloatAsState(
         targetValue = if(select == 1) 0f else 1f,
-        label = "tab_animation",
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioNoBouncy,
             stiffness = Spring.StiffnessLow
@@ -769,7 +768,7 @@ fun SelectionBottomBar(
                     onClick = {
                         loginViewModel.selectionWorkout()
                         if(select == userData?.version) {
-                            navController.navigate("workout_screen")
+                            navController.navigate("home_screen/1")
                         } else {
                             navController.navigate("start_screen")
                         }

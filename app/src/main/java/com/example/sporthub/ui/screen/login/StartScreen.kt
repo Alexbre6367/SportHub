@@ -455,7 +455,7 @@ fun StartBottomBar(
                         onClick = {
                             loginViewModel.version(selectedIndex)
                             loginViewModel.loadUserData()
-                            navController.navigate("home_screen")
+                            navController.navigate("home_screen/0")
                         },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },

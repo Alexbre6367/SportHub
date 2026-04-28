@@ -79,6 +79,7 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun AddWorkoutScreen(
@@ -100,7 +101,7 @@ fun AddWorkoutScreen(
 
     LaunchedEffect(selectedId) {
         if(selectedId.isNotEmpty()) {
-            delay(5000)
+            delay(5000.milliseconds)
             workoutViewModel.clearSelectedExercises()
         }
     }
@@ -182,7 +183,7 @@ fun AddWorkoutBar(
 
     LaunchedEffect(isDelete) {
         if(isDelete) {
-            delay(5000)
+            delay(5000.milliseconds)
             isDelete = false
         }
     }
@@ -297,7 +298,7 @@ fun AddWorkoutBar(
                                 if (isDelete) {
                                     workoutViewModel.deleteWorkoutWithExercise(workoutEdit.workout)
                                     keyboardController?.hide()
-                                    navController.popBackStack()
+                                    navController.navigate("home_screen/1")
                                 } else {
                                     isDelete = true
                                 }
@@ -353,7 +354,7 @@ fun AddWorkoutBar(
                             if (isKeyboard) {
                                 keyboardController?.hide()
                             } else {
-                                navController.popBackStack()
+                                navController.navigate("home_screen/1")
                             }
                         },
                         indication = null,
@@ -384,7 +385,7 @@ fun AddWorkoutBar(
                                     ),
                                     exercises,
                                 )
-                                navController.popBackStack()
+                                navController.navigate("home_screen/1")
                             } else {
                                 Toast.makeText(
                                     context,

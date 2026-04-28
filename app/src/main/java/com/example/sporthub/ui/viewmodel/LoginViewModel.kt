@@ -16,6 +16,7 @@ import com.example.sporthub.data.repository.AuthRepository
 import com.example.sporthub.data.repository.SportHubRepository
 import com.example.sporthub.data.sporthub.SportHubDatabase
 import com.example.sporthub.data.sporthub.User
+import com.example.sporthub.utils.toBitmap
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -65,13 +66,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
 
         viewModelScope.launch {
             currentUser.collect { user ->
-                user?.uri?.let {
-                    if (user.uri.isNotEmpty()) {
-                        loadBitmapFromUri(user.uri.toUri())
-                    } else {
-                        _loadedBitmap.value = null
-                    }
-                }
+                _loadedBitmap.value = user?.uri?.takeIf {
+                    it.isNotEmpty()
+                }?.toUri()?.toBitmap(application)
             }
         }
     }
@@ -228,7 +225,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
         if(user.version == 0) return "start_screen"
 
         Log.d("MyLog", "Все данные заполнены")
-        return "home_screen"
+        return "home_screen/0"
     }
 
     private fun saveImageToInternalStorage(uri: Uri): String? {
@@ -253,30 +250,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
         }
     }
 
-    private fun loadBitmapFromUri(uri: Uri) {
-        viewModelScope.launch {
-            try {
-                val context = getApplication<Application>()
-
-                val actualUri = if (uri.scheme == null) {
-                    val file = File(context.filesDir, uri.toString())
-                    Uri.fromFile(file)
-                } else {
-                    uri
-                }
-
-                val source = ImageDecoder.createSource(context.contentResolver, actualUri)
-                val bitmap = ImageDecoder.decodeBitmap(source)
-                _loadedBitmap.value = bitmap
-
-                Log.d("MyLog", "Bitmap загружен из: $actualUri")
-            } catch (e: Exception) {
-                Log.e("MyLog", "Ошибка загрузки Bitmap", e)
-            }
-        }
-    }
-
-    fun imageUri(uri: Uri) {
+    fun imageUri(uri: Uri, context: Context) {
         viewModelScope.launch {
             try {
                 val uid = secureStorage.getUserId() ?: return@launch
@@ -293,7 +267,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
                     sportHubRepository.updateUser(updatedUser)
                     _currentUser.value = updatedUser
 
-                    loadBitmapFromUri(fileName.toUri())
+                    uri.toBitmap(context)
 
                     Log.d("MyLog", "Изображение обновлено: $fileName")
                 }

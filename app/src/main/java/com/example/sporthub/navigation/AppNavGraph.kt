@@ -27,7 +27,6 @@ import com.example.sporthub.ui.screen.home.DeleteAccountBottomBar
 import com.example.sporthub.ui.screen.home.GeminiBar
 import com.example.sporthub.ui.screen.home.SelectionTopBar
 import com.example.sporthub.ui.screen.home.TimerGlassBottomBar
-import com.example.sporthub.ui.screen.home.WorkoutGlassBottomBar
 import com.example.sporthub.ui.screen.login.ForgotPasswordBottomBar
 import com.example.sporthub.ui.screen.login.LevelBottomBar
 import com.example.sporthub.ui.screen.login.SignInBottomBar
@@ -49,7 +48,6 @@ fun AppNavGraph(
     timerViewModel: TimerViewModel,
     workoutViewModel: WorkoutViewModel,
     geminiViewModel: GeminiViewModel,
-
 ) {
     var startDestination by remember { mutableStateOf<String?>(null) }
     val userData by loginViewModel.currentUser.collectAsState()
@@ -127,15 +125,6 @@ fun AppNavGraph(
                 )
             }
 
-            composable(route = "home_screen") {
-                StrikeDay(
-                    navController = navController,
-                    loginViewModel,
-                    homeViewModel,
-                    timerViewModel
-                )
-            }
-
             composable(route = "account_screen") {
                 AccountGlassBottomBar(
                     navController,
@@ -158,11 +147,22 @@ fun AppNavGraph(
                 )
             }
 
-            composable(route = "workout_screen") {
-                WorkoutGlassBottomBar(
-                    navController,
+            composable(
+                route = "home_screen/{screenIndex}",
+                arguments = listOf(navArgument("screenIndex") {
+                    type = NavType.IntType
+                    defaultValue = 0
+                })
+            ) { backStackEntry ->
+                val screenIndex = backStackEntry.arguments?.getInt("screenIndex") ?: 0
+
+                StrikeDay(
+                    navController = navController,
                     loginViewModel,
-                    workoutViewModel
+                    homeViewModel,
+                    timerViewModel,
+                    workoutViewModel,
+                    screenIndex
                 )
             }
 
