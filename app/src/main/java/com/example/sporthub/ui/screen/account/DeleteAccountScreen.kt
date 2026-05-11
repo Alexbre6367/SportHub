@@ -1,4 +1,4 @@
-package com.example.sporthub.ui.screen.home
+package com.example.sporthub.ui.screen.account
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
@@ -246,23 +246,23 @@ fun DeleteAccountBottomBar(
                                                 ).show()
                                             }
                                         )
-                                    } else {
-                                        loginViewModel.deleteAccount(
-                                            password = passwordState.value,
-                                            onSuccess = {
-                                                navController.navigate("welcome_screen") {
-                                                    popUpTo(0)
-                                                }
-                                            },
-                                            onError = {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Invalid value or network error",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-                                        )
                                     }
+                                } else {
+                                    loginViewModel.deleteAccount(
+                                        password = passwordState.value,
+                                        onSuccess = {
+                                            navController.navigate("welcome_screen") {
+                                                popUpTo(0)
+                                            }
+                                        },
+                                        onError = {
+                                            Toast.makeText(
+                                                context,
+                                                "Invalid value or network error",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    )
                                 }
                             }
                         },
