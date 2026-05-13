@@ -211,7 +211,6 @@ fun GeminiBar(
                         onClick = {
                             navController.popBackStack()
                         },
-                        enabled = !isLoading,
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
                     ),

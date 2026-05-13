@@ -1,4 +1,4 @@
-package com.example.sporthub.ui.screen.home
+package com.example.sporthub.ui.screen.workout
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Spring

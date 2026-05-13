@@ -1,4 +1,4 @@
-package com.example.sporthub.ui.screen.home
+package com.example.sporthub.ui.screen.account
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult

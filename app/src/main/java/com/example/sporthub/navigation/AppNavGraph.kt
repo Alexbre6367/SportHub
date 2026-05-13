@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -21,11 +22,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.sporthub.ui.components.details.InputGlass
 import com.example.sporthub.ui.components.home.StrikeDay
-import com.example.sporthub.ui.screen.home.AccountGlassBottomBar
-import com.example.sporthub.ui.screen.home.AddWorkoutBar
-import com.example.sporthub.ui.screen.home.DeleteAccountBottomBar
+import com.example.sporthub.ui.screen.account.AccountGlassBottomBar
+import com.example.sporthub.ui.screen.account.DeleteAccountBottomBar
 import com.example.sporthub.ui.screen.home.GeminiBar
-import com.example.sporthub.ui.screen.home.SelectionTopBar
 import com.example.sporthub.ui.screen.home.TimerGlassBottomBar
 import com.example.sporthub.ui.screen.login.ForgotPasswordBottomBar
 import com.example.sporthub.ui.screen.login.LevelBottomBar
@@ -34,6 +33,10 @@ import com.example.sporthub.ui.screen.login.SignUpEmailBottomBar
 import com.example.sporthub.ui.screen.login.SignUpPasswordBottomBar
 import com.example.sporthub.ui.screen.login.StartBottomBar
 import com.example.sporthub.ui.screen.login.WelcomeScreen
+import com.example.sporthub.ui.screen.workout.AddWorkoutBar
+import com.example.sporthub.ui.screen.workout.CameraTopAppBar
+import com.example.sporthub.ui.screen.workout.SelectionTopBar
+import com.example.sporthub.ui.viewmodel.CameraViewModel
 import com.example.sporthub.ui.viewmodel.GeminiViewModel
 import com.example.sporthub.ui.viewmodel.HomeViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
@@ -47,7 +50,7 @@ fun AppNavGraph(
     homeViewModel: HomeViewModel,
     timerViewModel: TimerViewModel,
     workoutViewModel: WorkoutViewModel,
-    geminiViewModel: GeminiViewModel,
+    geminiViewModel: GeminiViewModel
 ) {
     var startDestination by remember { mutableStateOf<String?>(null) }
     val userData by loginViewModel.currentUser.collectAsState()
@@ -210,6 +213,15 @@ fun AppNavGraph(
                 ForgotPasswordBottomBar(
                     navController,
                     loginViewModel
+                )
+            }
+
+            composable(route = "camera_screen") {
+                val cameraViewModel: CameraViewModel = viewModel()
+                CameraTopAppBar(
+                    cameraViewModel,
+                    timerViewModel,
+                    navController
                 )
             }
         }

@@ -1,4 +1,4 @@
-package com.example.sporthub.ui.screen.home
+package com.example.sporthub.ui.screen.workout
 
 import android.widget.Toast
 import androidx.compose.foundation.background

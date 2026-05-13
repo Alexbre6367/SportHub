@@ -22,7 +22,6 @@ class TimerViewModel: ViewModel() {
 
         val intent = Intent(context, TimerService::class.java)
         context.startForegroundService(intent)
-
     }
 
     fun resumeTimer() {
@@ -50,5 +49,10 @@ class TimerViewModel: ViewModel() {
         val minutes = seconds / 60
         val remainingSeconds = seconds % 60
         return "%02d:%02d".format(minutes, remainingSeconds)
+    }
+
+    fun cameraFormatTime(seconds: Long): String {
+        val remainingSeconds = seconds % 60
+        return "%d".format(remainingSeconds)
     }
 }

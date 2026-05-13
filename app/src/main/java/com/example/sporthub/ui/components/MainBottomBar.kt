@@ -43,8 +43,8 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.sporthub.ui.screen.home.ChoiceWorkoutsScreen
 import com.example.sporthub.ui.screen.home.HomeScreen
+import com.example.sporthub.ui.screen.workout.ChoiceWorkoutsScreen
 import com.example.sporthub.ui.theme.LightGray
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.viewmodel.HomeViewModel
@@ -85,7 +85,6 @@ fun MainBottomBar(
     )
 
     Box(Modifier.fillMaxSize()) {
-
         Box(
             Modifier
                 .fillMaxSize()

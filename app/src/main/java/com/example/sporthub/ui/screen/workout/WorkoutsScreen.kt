@@ -1,4 +1,4 @@
-package com.example.sporthub.ui.screen.home
+package com.example.sporthub.ui.screen.workout
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -221,7 +221,7 @@ fun WorkoutTopAppBar(
                     )
                     .background(color = Color.Black, shape = RoundedCornerShape(16.dp))
                     .clickable(
-                        onClick = {  },
+                        onClick = { navController.navigate("camera_screen") },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }),
                 contentAlignment = Alignment.Center
