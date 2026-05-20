@@ -15,6 +15,7 @@ var gray = Color(77, 77, 77)
 var LightGray = Color(103, 102, 102, 255)
 val LightBlue = Color(0xFFD7EAF1)
 val OffWhite = Color(0xFFF9F9F7)
+val AccountGray = Color(245, 245, 245)
 val LightPurple = Color(0xFFB19CD9)
 val LightWhite = Color(230,231,235)
 

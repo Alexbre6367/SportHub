@@ -20,9 +20,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.sporthub.ui.components.account.AccountGlassBottomBar
 import com.example.sporthub.ui.components.details.InputGlass
 import com.example.sporthub.ui.components.home.StrikeDay
-import com.example.sporthub.ui.screen.account.AccountGlassBottomBar
 import com.example.sporthub.ui.screen.account.DeleteAccountBottomBar
 import com.example.sporthub.ui.screen.home.GeminiBar
 import com.example.sporthub.ui.screen.home.TimerGlassBottomBar
