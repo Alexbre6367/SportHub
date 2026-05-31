@@ -42,6 +42,7 @@ import com.example.sporthub.ui.components.MainBottomBar
 import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
+import com.example.sporthub.ui.viewmodel.FaceViewModel
 import com.example.sporthub.ui.viewmodel.HomeViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.example.sporthub.ui.viewmodel.TimerViewModel
@@ -59,6 +60,7 @@ fun StrikeDay(
     homeViewModel: HomeViewModel,
     timerViewModel: TimerViewModel,
     workoutViewModel: WorkoutViewModel,
+    faceViewModel: FaceViewModel,
     screenIndex: Int = 0
 ) {
     var strikeDay by remember { mutableStateOf(false) }
@@ -87,9 +89,10 @@ fun StrikeDay(
             homeViewModel,
             timerViewModel,
             workoutViewModel,
+            faceViewModel,
             backdrop = backdrop,
             screenIndex = screenIndex,
-            onStrike = { strikeDay = true},
+            onStrike = { strikeDay = true },
         )
 
         if(strikeDay) {

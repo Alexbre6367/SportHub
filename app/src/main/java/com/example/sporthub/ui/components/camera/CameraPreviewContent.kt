@@ -4,6 +4,8 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -18,6 +20,7 @@ fun CameraPreviewContent(
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 ) {
     val context = LocalContext.current
+    val frontCamera by cameraViewModel.frontCamera.collectAsState()
 
     val previewView = remember {
         PreviewView(context).apply {
@@ -26,7 +29,7 @@ fun CameraPreviewContent(
         }
     }
 
-    LaunchedEffect(lifecycleOwner, previewView.surfaceProvider) {
+    LaunchedEffect(lifecycleOwner, previewView.surfaceProvider, frontCamera) {
         cameraViewModel.bindToCamera(
             lifecycleOwner,
             surfaceProvider = previewView.surfaceProvider

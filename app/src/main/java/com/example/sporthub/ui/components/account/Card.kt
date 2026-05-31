@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +47,7 @@ import com.example.sporthub.ui.theme.LightGray
 import com.example.sporthub.ui.theme.LightPurple
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
+import com.example.sporthub.ui.viewmodel.FaceViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -53,6 +55,7 @@ import com.google.firebase.auth.FirebaseAuth
 fun Card(
     navController: NavController,
     loginViewModel: LoginViewModel,
+    faceViewModel: FaceViewModel,
     emailState: MutableState<String>,
     onResend: () -> Unit = {},
 ) {
@@ -60,6 +63,8 @@ fun Card(
     val isResetPassword by loginViewModel.isResetPassword.collectAsState()
     val context = LocalContext.current
     val activity = context as? FragmentActivity
+
+    val sensitive by faceViewModel.faceData.observeAsState()
 
     Spacer(Modifier.height(20.dp))
     Column(
@@ -118,7 +123,7 @@ fun Card(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Your details",
+                    text = "Your Details",
                     color = black,
                     style = MaterialTheme.typography.titleLarge,
                     fontSize = 18.sp,
@@ -138,7 +143,18 @@ fun Card(
             Row(
                 modifier = Modifier
                     .settingCard()
-                    .align(Alignment.Start),
+                    .align(Alignment.Start)
+                    .clickable (
+                        onClick = {
+                            if(sensitive != null) {
+                                navController.navigate("face_statistics_screen")
+                            } else {
+                                navController.navigate("sensitive_skin_screen")
+                            }
+                        },
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -295,7 +311,7 @@ fun Card(
                     .settingCard()
                     .align(Alignment.Start)
                     .clickable (
-                        onClick = { navController.navigate("delete_Account_screen")},
+                        onClick = { navController.navigate("delete_account_screen")},
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }
                     ),

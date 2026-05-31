@@ -47,6 +47,7 @@ import com.example.sporthub.ui.screen.home.HomeScreen
 import com.example.sporthub.ui.screen.workout.ChoiceWorkoutsScreen
 import com.example.sporthub.ui.theme.LightGray
 import com.example.sporthub.ui.theme.black
+import com.example.sporthub.ui.viewmodel.FaceViewModel
 import com.example.sporthub.ui.viewmodel.HomeViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.example.sporthub.ui.viewmodel.TimerViewModel
@@ -66,6 +67,7 @@ fun MainBottomBar(
     homeViewModel: HomeViewModel,
     timerViewModel: TimerViewModel,
     workoutViewModel: WorkoutViewModel,
+    faceViewModel: FaceViewModel,
     backdrop: LayerBackdrop,
     onStrike: () -> Unit,
     screenIndex: Int = 0
@@ -108,6 +110,7 @@ fun MainBottomBar(
                         loginViewModel,
                         homeViewModel,
                         timerViewModel,
+                        faceViewModel,
                         onStrike = onStrike
                     )
 

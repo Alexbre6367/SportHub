@@ -3,14 +3,12 @@ package com.example.sporthub.ui.viewmodel
 import android.app.Application
 import android.graphics.Bitmap
 import android.icu.util.Calendar
-import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sporthub.data.auth.SecureStorage
 import com.example.sporthub.data.repository.SportHubRepository
 import com.example.sporthub.data.sporthub.SportHubDatabase
 import com.example.sporthub.llm.Gemini
-import com.example.sporthub.utils.toBitmap
 import com.google.firebase.ai.type.Content
 import com.google.firebase.ai.type.content
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,12 +19,12 @@ import kotlinx.coroutines.launch
 data class ChatMessage(
     val text: String,
     val isUser: Boolean,
+    val image: Bitmap? = null
 )
-
 
 class GeminiViewModel(application: Application) : AndroidViewModel(application) {
     private val db = SportHubDatabase.getInstance(application)
-    private val repository = SportHubRepository(db.sportHubDao, db.healthDao, db.workoutDao)
+    private val repository = SportHubRepository(db.sportHubDao, db.healthDao, db.workoutDao, db.faceDao)
     private val secureStorage = SecureStorage.getInstance(application)
 
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
@@ -39,11 +37,12 @@ class GeminiViewModel(application: Application) : AndroidViewModel(application) 
     val loadedBitmap = _loadedBitmap.asStateFlow()
 
     fun message(text: String) {
-        _messages.value += ChatMessage(text, true)
+        val bitmap = _loadedBitmap.value
+        clearFile()
+        _messages.value += ChatMessage(text, true, bitmap)
         viewModelScope.launch {
             _isLoading.value = true
             try {
-
                 val userId = secureStorage.getUserId() ?: return@launch
                 val user = repository.getUser(userId).first() ?: return@launch
 
@@ -54,18 +53,36 @@ class GeminiViewModel(application: Application) : AndroidViewModel(application) 
 
                 val healthData = repository.getHealthForToday(dateId).first() ?: return@launch
 
-                val aiResponse = Gemini.analyze(
-                    text,
-                    _chatHistory,
-                    user,
-                    healthData
-                )
+                val faceData = repository.getFaceData.first() ?: return@launch
+
+                val aiResponse = if(bitmap != null) {
+                    Gemini.analyzePhoto(
+                        text,
+                        bitmap,
+                        _chatHistory,
+                        user,
+                        healthData,
+                        faceData,
+                    )
+                } else {
+                    Gemini.analyze(
+                        text,
+                        _chatHistory,
+                        user,
+                        healthData,
+                        faceData,
+                    )
+                }
 
                 if(aiResponse != null) {
-                    _chatHistory.add(content(role = "user") { text(text) })
+                    _chatHistory.add(content(role = "user") {
+                        if(bitmap != null) image(bitmap)
+                        text(text)
+                    })
                     _chatHistory.add(content(role = "model") { text(aiResponse) })
 
                     _messages.value += ChatMessage(aiResponse, false)
+                    _loadedBitmap.value = null
                 } else {
                     _messages.value += ChatMessage("Ошибка обработки", false)
                 }
@@ -76,13 +93,13 @@ class GeminiViewModel(application: Application) : AndroidViewModel(application) 
                 )
             } finally {
                 _isLoading.value = false
+                clearFile()
             }
         }
     }
 
-    fun attachedFile(uri: Uri) {
+    fun setLoadedBitmap(bitmap: Bitmap?) {
         viewModelScope.launch {
-            val bitmap = uri.toBitmap(getApplication())
             _loadedBitmap.value = bitmap
         }
     }

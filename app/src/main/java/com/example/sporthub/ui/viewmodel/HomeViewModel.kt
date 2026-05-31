@@ -24,7 +24,7 @@ import java.util.Calendar
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = SportHubDatabase.getInstance(application)
-    private val repository = SportHubRepository(db.sportHubDao, db.healthDao, db.workoutDao)
+    private val repository = SportHubRepository(db.sportHubDao, db.healthDao, db.workoutDao, db.faceDao)
     private val healthState = HealthState(application)
 
     private val secureStorage = SecureStorage.getInstance(application)

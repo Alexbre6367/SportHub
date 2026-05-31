@@ -69,3 +69,13 @@ data class WorkoutWithExercises(
     ) val exercises: List<ExerciseEntity>
 )
 
+@Entity(tableName = "face_table")
+data class FaceEntity(
+    @PrimaryKey val id: Int = 1,
+    val sensitive: Float,
+    val acne: Int,
+    val dryness: Int,
+    val moisture: Int,
+    val widget: Boolean = false
+)
+

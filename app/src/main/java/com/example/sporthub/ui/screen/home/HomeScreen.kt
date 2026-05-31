@@ -32,8 +32,10 @@ import com.example.sporthub.ui.components.home.Calories
 import com.example.sporthub.ui.components.home.HealthStats
 import com.example.sporthub.ui.components.home.HomeTopAppBar
 import com.example.sporthub.ui.components.home.WaterTarget
+import com.example.sporthub.ui.components.home.Widget
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.OffWhite
+import com.example.sporthub.ui.viewmodel.FaceViewModel
 import com.example.sporthub.ui.viewmodel.HomeViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.example.sporthub.ui.viewmodel.TimerViewModel
@@ -44,6 +46,7 @@ fun HomeScreen(
     loginViewModel: LoginViewModel,
     homeViewModel: HomeViewModel,
     timerViewModel: TimerViewModel,
+    faceViewModel: FaceViewModel,
     onStrike: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -121,6 +124,11 @@ fun HomeScreen(
 
         Spacer(Modifier.height(20.dp))
         Calories(homeViewModel)
+
+        Widget(
+            navController,
+            faceViewModel
+        )
 
         Spacer(
             modifier = Modifier

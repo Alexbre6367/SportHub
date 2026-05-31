@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 class WorkoutViewModel(application: Application) : AndroidViewModel(application) {
     private val db = SportHubDatabase.getInstance(application)
-    private val repository = SportHubRepository(db.sportHubDao, db.healthDao, db.workoutDao)
+    private val repository = SportHubRepository(db.sportHubDao, db.healthDao, db.workoutDao, db.faceDao)
 
     val workoutList: LiveData<List<WorkoutWithExercises>> = repository.allWorkout.asLiveData()
     

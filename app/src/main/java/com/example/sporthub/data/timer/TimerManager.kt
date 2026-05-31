@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 object TimerManager { //object + курутина позволяет работать пока живет приложение и есть память под это
     private val _timerLeft = MutableStateFlow(0L)
@@ -36,7 +37,7 @@ object TimerManager { //object + курутина позволяет работ�
         timerJob?.cancel()
         timerJob = scope.launch {
             while(_timerLeft.value > 0) {
-                delay(1000L)
+                delay(1.seconds)
                 _timerLeft.value -= 1
             }
         }

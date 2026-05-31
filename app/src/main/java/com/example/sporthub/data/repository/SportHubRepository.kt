@@ -4,6 +4,8 @@ import android.icu.util.Calendar
 import android.util.Log
 import androidx.health.connect.client.units.Energy
 import com.example.sporthub.data.sporthub.ExerciseEntity
+import com.example.sporthub.data.sporthub.FaceDao
+import com.example.sporthub.data.sporthub.FaceEntity
 import com.example.sporthub.data.sporthub.HealthDao
 import com.example.sporthub.data.sporthub.HealthEntity
 import com.example.sporthub.data.sporthub.SportHubDao
@@ -18,7 +20,8 @@ import kotlinx.coroutines.tasks.await
 class SportHubRepository(
     private val sportHubDao: SportHubDao,
     private val healthDao: HealthDao,
-    private val workoutDao: WorkoutDao
+    private val workoutDao: WorkoutDao,
+    private val faceDao: FaceDao
 ) {
 
     suspend fun addUser(user: User) {
@@ -71,7 +74,7 @@ class SportHubRepository(
                 sleep = sleep,
                 oxygen = oxygen,
                 water = water,
-                calories = calories.inKilocalories.toInt(),
+                calories = calories.inKilocalories.toInt()
             )
         )
     }
@@ -108,4 +111,14 @@ class SportHubRepository(
         workoutDao.deleteExercise(id)
     }
 
+
+    suspend fun addFace(sensitive: Float, acne: Int, dryness: Int, moisture: Int) {
+        faceDao.addSensitive(FaceEntity(1, sensitive, acne, dryness, moisture))
+    }
+
+    val getFaceData: Flow<FaceEntity?> = faceDao.getFace()
+
+    suspend fun updateWidget(widget: Boolean) {
+        faceDao.updateWidget(widget)
+    }
 }

@@ -17,7 +17,7 @@ android {
         minSdk = 29
         targetSdk = 36
         versionCode = 1
-        versionName = "0.9.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -76,7 +76,9 @@ android {
 
 dependencies {
 
+    implementation("com.google.mlkit:face-detection:16.1.7")
     implementation("com.google.mlkit:pose-detection-accurate:18.0.0-beta5")
+
     val camerax_version = "1.6.1"
     implementation("androidx.camera:camera-core:${camerax_version}")
     implementation("androidx.camera:camera-camera2:${camerax_version}")

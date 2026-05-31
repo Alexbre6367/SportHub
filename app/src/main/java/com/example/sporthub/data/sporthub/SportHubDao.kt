@@ -59,3 +59,15 @@ interface WorkoutDao {
     @Query("DELETE FROM exercise_table WHERE exerciseId = :id")
     suspend fun deleteExercise(id: Int)
 }
+
+@Dao
+interface FaceDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addSensitive(sensitive: FaceEntity): Long
+
+    @Query("Select * FROM face_table WHERE id = 1")
+    fun getFace(): Flow<FaceEntity?>
+
+    @Query("UPDATE face_table SET widget = :widget WHERE id = 1")
+    suspend fun updateWidget(widget: Boolean)
+}

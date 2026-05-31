@@ -28,7 +28,7 @@ import java.util.Calendar
 
 class LoginViewModel(application: Application) : AndroidViewModel(application){
     private val db = SportHubDatabase.getInstance(application)
-    private val sportHubRepository = SportHubRepository(db.sportHubDao, db.healthDao, db.workoutDao)
+    private val sportHubRepository = SportHubRepository(db.sportHubDao, db.healthDao, db.workoutDao, db.faceDao)
     private val authRepository = AuthRepository(
         FirebaseAuth.getInstance(),
         FirebaseFirestore.getInstance(),
@@ -45,7 +45,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
     val currentUser = _currentUser.asStateFlow()
 
     private val _isUpdateVersion = MutableStateFlow(false)
-    val isUpdateVersion = _isUpdateVersion.asStateFlow()
 
     private val _isDelete = MutableStateFlow(false)
     val isDelete = _isDelete.asStateFlow()
@@ -92,11 +91,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
                 if(user != null) {
                     _currentUser.value = user
                     _authState.value = AuthState.Success
-                    Log.e("MyLog", "Пользователь авторизовался через Email $email")
+                    Log.d("MyLog", "Пользователь авторизовался через Email $email")
                 } else {
                     _authState.value = AuthState.Error
                 }
             } catch (e: Exception) {
+                Log.e("MyLog", "Ошибка авторизации через Email $email", e)
                 _authState.value = AuthState.Error
             }
         }
@@ -114,11 +114,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
                         _currentUser.value = user
                         _authState.value = AuthState.Success
                         _isGoogleAccount.value = false
-                        Log.e("MyLog", "Пользователь авторизовался через Google")
+                        Log.d("MyLog", "Пользователь авторизовался через Google")
                     } else {
                         _authState.value = AuthState.Error
                     }
                 } catch (e: Exception) {
+                    Log.e("MyLog", "Ошибка авторизации через Google", e)
                     _authState.value = AuthState.Error
                 }
             } else {
@@ -140,6 +141,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
                     _authState.value = AuthState.Error
                 }
             } catch (e: Exception) {
+                Log.e("MyLog", "Ошибка входа через Email $email", e)
                 _authState.value = AuthState.Error
             }
         }

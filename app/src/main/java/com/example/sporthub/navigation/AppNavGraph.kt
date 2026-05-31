@@ -20,10 +20,12 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.sporthub.ui.components.account.AccountGlassBottomBar
 import com.example.sporthub.ui.components.details.InputGlass
 import com.example.sporthub.ui.components.home.StrikeDay
+import com.example.sporthub.ui.screen.account.AccountBottomBar
 import com.example.sporthub.ui.screen.account.DeleteAccountBottomBar
+import com.example.sporthub.ui.screen.face.FaceBottomBar
+import com.example.sporthub.ui.screen.face.SensitiveBottomBar
 import com.example.sporthub.ui.screen.home.GeminiBar
 import com.example.sporthub.ui.screen.home.TimerGlassBottomBar
 import com.example.sporthub.ui.screen.login.ForgotPasswordBottomBar
@@ -37,6 +39,7 @@ import com.example.sporthub.ui.screen.workout.AddWorkoutBar
 import com.example.sporthub.ui.screen.workout.CameraTopAppBar
 import com.example.sporthub.ui.screen.workout.SelectionTopBar
 import com.example.sporthub.ui.viewmodel.CameraViewModel
+import com.example.sporthub.ui.viewmodel.FaceViewModel
 import com.example.sporthub.ui.viewmodel.GeminiViewModel
 import com.example.sporthub.ui.viewmodel.HomeViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
@@ -50,7 +53,8 @@ fun AppNavGraph(
     homeViewModel: HomeViewModel,
     timerViewModel: TimerViewModel,
     workoutViewModel: WorkoutViewModel,
-    geminiViewModel: GeminiViewModel
+    geminiViewModel: GeminiViewModel,
+    faceViewModel: FaceViewModel
 ) {
     var startDestination by remember { mutableStateOf<String?>(null) }
     val userData by loginViewModel.currentUser.collectAsState()
@@ -129,9 +133,10 @@ fun AppNavGraph(
             }
 
             composable(route = "account_screen") {
-                AccountGlassBottomBar(
+                AccountBottomBar(
                     navController,
-                    loginViewModel
+                    loginViewModel,
+                    faceViewModel
                 )
             }
 
@@ -165,6 +170,7 @@ fun AppNavGraph(
                     homeViewModel,
                     timerViewModel,
                     workoutViewModel,
+                    faceViewModel,
                     screenIndex
                 )
             }
@@ -223,6 +229,36 @@ fun AppNavGraph(
                     timerViewModel,
                     navController
                 )
+            }
+
+            composable(route = "sensitive_skin_screen") {
+                if(userData?.version == 1) {
+                    SensitiveBottomBar(
+                        navController,
+                        faceViewModel
+                    )
+                } else {
+                    StartBottomBar(
+                        navController,
+                        loginViewModel
+                    )
+                }
+            }
+
+            composable(route = "face_statistics_screen") {
+                val cameraViewModel: CameraViewModel = viewModel()
+                if(userData?.version == 1) {
+                    FaceBottomBar(
+                        cameraViewModel,
+                        faceViewModel,
+                        navController
+                    )
+                } else {
+                    StartBottomBar(
+                        navController,
+                        loginViewModel
+                    )
+                }
             }
         }
     }

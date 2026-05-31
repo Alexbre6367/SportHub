@@ -2,10 +2,7 @@ package com.example.sporthub.ui.screen.workout
 
 import android.Manifest
 import android.app.Activity
-import android.content.Intent
-import android.net.Uri
 import android.os.Build
-import android.provider.Settings
 import android.view.RoundedCorner
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -28,10 +25,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,19 +47,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.sporthub.ui.components.camera.CameraPreviewContent
+import com.example.sporthub.ui.components.camera.NoPermissions
 import com.example.sporthub.ui.components.camera.PoseDetector
+import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.CameraViewModel
@@ -100,9 +99,9 @@ fun CameraScreen(
     val classificationResult by cameraViewModel.classificationResult.collectAsState()
 
     LaunchedEffect(workout) {
-        if(workout) {
+        if (workout) {
             cameraViewModel.loadPoseClassifier()
-            cameraViewModel.active = true
+            cameraViewModel.start()
         }
     }
 
@@ -140,7 +139,11 @@ fun CameraScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(OffWhite)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(LightBlue, OffWhite), startY = 0f, endY = 1500f
+                )
+            )
             .padding(bottom = 12.dp)
             .navigationBarsPadding()
     ) {
@@ -162,68 +165,7 @@ fun CameraScreen(
                     PoseDetector(nonNullPose, 480, 640)
                 }
             } else {
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 20.dp)
-                        .height(180.dp)
-                        .fillMaxWidth()
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { RoundedCornerShape(24.dp) },
-                            effects = {
-                                vibrancy()
-                                blur(2f.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            },
-                            onDrawSurface = {
-                                drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                                drawRect(OffWhite.copy(alpha = 0.5f))
-                            }
-                        )
-                        .clickable(
-                            onClick = {
-                                val intent =
-                                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                        data = Uri.fromParts("package", context.packageName, null)
-                                    }
-                                context.startActivity(intent)
-                            },
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        )
-                        .padding(20.dp)
-                ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Settings",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontSize = 18.sp,
-                                color = gray,
-                            )
-
-                            Spacer(Modifier.weight(1f))
-                            Icon(
-                                Icons.AutoMirrored.Default.ArrowForward,
-                                contentDescription = null,
-                                tint = gray,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Text(
-                            text = "Please allow me to use the camera",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontSize = 32.sp,
-                            color = gray,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
-                }
+                NoPermissions(backdrop)
             }
         }
 
@@ -354,12 +296,17 @@ fun CameraTopAppBar(
     var workout by remember { mutableStateOf(false) }
     var end by remember { mutableStateOf(false) }
 
+    LaunchedEffect(end) {
+        if (end) {
+            delay(15.seconds)
+            end = false
+        }
+    }
+
     DisposableEffect(Unit) {
         onDispose {
             val window = (view.context as Activity).window
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
-            workout = false
-            end = false
         }
     }
 
@@ -449,6 +396,38 @@ fun CameraTopAppBar(
                     color = gray
                 )
             }
+
+            Spacer(Modifier.width(12.dp))
+            Box(
+                modifier = Modifier
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { CircleShape },
+                        effects = {
+                            vibrancy()
+                            blur(2f.dp.toPx())
+                            lens(16f.dp.toPx(), 32f.dp.toPx())
+                        },
+                        onDrawSurface = {
+                            drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
+                            drawRect(OffWhite.copy(alpha = 0.5f))
+                        }
+                    )
+                    .size(58.dp)
+                    .clickable(
+                        onClick = { cameraViewModel.switch() },
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = null,
+                    tint = gray,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
 
         if (secondsLeft > 0) {
@@ -484,7 +463,7 @@ fun CameraTopAppBar(
         }
 
         val classificationEnd by cameraViewModel.classificationEnd.collectAsState()
-        if(end && classificationEnd.isNotBlank()) {
+        if (end && classificationEnd.isNotBlank()) {
             Column(
                 modifier = Modifier
                     .align(Alignment.Center)

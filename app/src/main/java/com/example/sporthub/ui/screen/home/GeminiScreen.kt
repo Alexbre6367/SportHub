@@ -53,19 +53,21 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.sporthub.ui.components.MessageBox
 import com.example.sporthub.ui.components.chat.EmptyStateGemini
+import com.example.sporthub.ui.components.chat.MessageBox
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.GeminiViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.example.sporthub.utils.toBitmap
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
@@ -95,6 +97,7 @@ fun GeminiScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .imePadding()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(LightBlue, OffWhite), startY = 0f, endY = 1500f
@@ -157,12 +160,15 @@ fun GeminiBar(
         }
     }
 
+    val context = LocalContext.current
+
     val loadedBitmap by geminiViewModel.loadedBitmap.collectAsState()
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { nonNullUri ->
-            geminiViewModel.attachedFile(nonNullUri)
+        uri?.let {
+            val bitmap = it.toBitmap(context)
+            geminiViewModel.setLoadedBitmap(bitmap)
         }
     }
 
@@ -355,7 +361,7 @@ fun GeminiBar(
                                         )
                                         .clickable(
                                             onClick = {
-                                                if(loadedBitmap != null) {
+                                                if (loadedBitmap != null) {
                                                     geminiViewModel.clearFile()
                                                 } else {
                                                     launcher.launch("image/*")
@@ -366,7 +372,7 @@ fun GeminiBar(
                                         ),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    if(loadedBitmap != null) {
+                                    if (loadedBitmap != null) {
                                         Icon(
                                             Icons.Default.Clear,
                                             contentDescription = null,
@@ -381,16 +387,18 @@ fun GeminiBar(
                                     }
                                 }
                                 Spacer(Modifier.width(10.dp))
-                                if (promptText.isEmpty()) {
-                                    Text(
-                                        "Type something..",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontSize = 18.sp,
-                                        color = gray,
-                                    )
-                                }
+                                Box(Modifier.weight(1f)) {
+                                    if (promptText.isEmpty()) {
+                                        Text(
+                                            "Type something..",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontSize = 18.sp,
+                                            color = gray,
+                                        )
+                                    }
 
-                                innerTextField()
+                                    innerTextField()
+                                }
                             }
                         }
                     )
@@ -418,7 +426,6 @@ fun GeminiBar(
                                 if (promptText.isNotBlank()) {
                                     geminiViewModel.message(promptText)
                                     promptText = "" //очистка
-                                    geminiViewModel.clearFile()
                                 }
                             },
                             enabled = !isLoading,

@@ -10,9 +10,10 @@ import androidx.room.RoomDatabase
         User::class,
         HealthEntity::class,
         WorkoutEntity::class,
-        ExerciseEntity::class
+        ExerciseEntity::class,
+        FaceEntity::class
     ],
-    version = 24,
+    version = 28,
     exportSchema = false
 )
 abstract class SportHubDatabase: RoomDatabase() {
@@ -20,6 +21,7 @@ abstract class SportHubDatabase: RoomDatabase() {
     abstract val sportHubDao: SportHubDao
     abstract val healthDao: HealthDao
     abstract val workoutDao: WorkoutDao
+    abstract val faceDao: FaceDao
 
     companion object {
         private var INSTANCE: SportHubDatabase? = null
@@ -31,7 +33,6 @@ abstract class SportHubDatabase: RoomDatabase() {
                     SportHubDatabase::class.java,
                     "sporthub_database"
                 )
-                    .fallbackToDestructiveMigration()
                     .build()
                     .also { INSTANCE = it }
             }

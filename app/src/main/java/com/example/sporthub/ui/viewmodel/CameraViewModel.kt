@@ -11,6 +11,7 @@ import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.core.resolutionselector.ResolutionSelector
@@ -21,6 +22,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.face.Face
+import com.google.mlkit.vision.face.FaceDetection
+import com.google.mlkit.vision.face.FaceDetectorOptions
 import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseDetection
 import com.google.mlkit.vision.pose.accurate.AccuratePoseDetectorOptions
@@ -40,10 +44,20 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
         .setDetectorMode(AccuratePoseDetectorOptions.STREAM_MODE)
         .build()
 
+    private val faceOptions = FaceDetectorOptions.Builder()
+        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+        .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
+        .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
+        .build()
+
     private val poseDetector = PoseDetection.getClient(options)
+    private val faceDetector = FaceDetection.getClient(faceOptions)
 
     private val _detectedPose = MutableStateFlow<Pose?>(null)
     val detectedPose = _detectedPose.asStateFlow()
+
+    private val _detectedFace = MutableStateFlow<List<Face>>(emptyList())
+    val detectorFaces = _detectedFace.asStateFlow()
 
     private var poseClassifier: PoseClassifier? = null
     private val repetitionCounter = mutableListOf<RepetitionCounter>()
@@ -52,9 +66,16 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
     val classificationResult = _classificationResult.asStateFlow()
 
     private val _classificationEnd = MutableStateFlow("")
-    val classificationEnd= _classificationEnd.asStateFlow()
+    val classificationEnd = _classificationEnd.asStateFlow()
 
-    var active = false
+    private val _active = MutableStateFlow(false)
+
+    private val _frontCamera = MutableStateFlow(false)
+
+    private val _faceCamera = MutableStateFlow(false)
+    val frontCamera = _frontCamera.asStateFlow()
+
+    var imageCapture: ImageCapture? = null
 
     @OptIn(ExperimentalCamera2Interop::class)
     fun bindToCamera(
@@ -66,7 +87,7 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
             try {
                 cameraProvider = ProcessCameraProvider.getInstance(context).await()
 
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                val cameraSelector = if(_frontCamera.value) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
                 val cameraInfo = cameraProvider?.getCameraInfo(cameraSelector)
 
                 val isPreviewStab = cameraInfo?.let {
@@ -124,6 +145,10 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
                         it.surfaceProvider = surfaceProvider
                     }
 
+                imageCapture = ImageCapture.Builder()
+                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    .build()
+
                 val poseAnalysis = poseAnalysis(context)
 
                 cameraProvider?.unbindAll()
@@ -132,7 +157,8 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
                     lifecycleOwner,
                     cameraSelector,
                     previewUseCase,
-                    poseAnalysis
+                    poseAnalysis,
+                    imageCapture
                 )
             } catch (e: Exception) {
                 Log.e("MyLog", "Ошибка камеры ${e.message}")
@@ -160,50 +186,67 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
     @SuppressLint("SuspiciousIndentation")
     @OptIn(ExperimentalGetImage::class)
     private fun analyze(imageProxy: ImageProxy) { //сам анализ
-        if(!active) {
+        if(!_active.value) {
             imageProxy.close()
             return
         }
 
-        val mediaImage = imageProxy.image
-            if(mediaImage != null) {
-                val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-                poseDetector.process(image)
-                    .addOnSuccessListener { pose ->
-                        if(!active) return@addOnSuccessListener
+        val mediaImage = imageProxy.image ?: return imageProxy.close()
+        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
 
-                        _detectedPose.value = pose
 
-                        poseClassifier?.let { classifier ->
-                            val classification = classifier.classify(pose)
-                            val resultBuilder = StringBuilder()
+        if (_faceCamera.value) {
+            analyzeFace(image, imageProxy)
+        } else
+            analyzePose(image, imageProxy)
 
-                            for(counter in repetitionCounter) {
-                                val reps = counter.addClassificationResult(classification)
-                                val displayName = counter.className
-                                    .replace("pushups_down", "push-ups")
-                                    .replace("_down", "")
-                                    .uppercase()
+    }
 
-                                if(classification.getClassConfidence(counter.className) > 3f) {
-                                    _classificationResult.value = "$displayName: $reps"
-                                }
+    fun analyzePose(image: InputImage, imageProxy: ImageProxy) {
+        poseDetector.process(image)
+            .addOnSuccessListener { pose ->
+                if(!_active.value) return@addOnSuccessListener
 
-                                resultBuilder.append("$displayName: $reps\n")
-                            }
+                _detectedPose.value = pose
 
-                            _classificationEnd.value = resultBuilder.toString().trim()
+                poseClassifier?.let { classifier ->
+                    val classification = classifier.classify(pose)
+                    val resultBuilder = StringBuilder()
+
+                    for(counter in repetitionCounter) {
+                        val reps = counter.addClassificationResult(classification)
+                        val displayName = counter.className
+                            .replace("pushups_down", "push-ups")
+                            .replace("_down", "")
+                            .uppercase()
+
+                        if(classification.getClassConfidence(counter.className) > 3f) {
+                            _classificationResult.value = "$displayName: $reps"
                         }
+
+                        resultBuilder.append("$displayName: $reps\n")
                     }
-                    .addOnFailureListener { e ->
-                        Log.e("MyLog", "Ошибка обноружения ${e.message}")
-                    }
-                    .addOnCompleteListener {
-                        imageProxy.close()
-                    }
-            } else {
+
+                    _classificationEnd.value = resultBuilder.toString().trim()
+                }
+            }
+            .addOnCompleteListener {
                 imageProxy.close()
             }
+    }
+
+    fun analyzeFace(image: InputImage, imageProxy: ImageProxy) {
+        faceDetector.process(image)
+            .addOnSuccessListener { face ->
+                _detectedFace.value = face
+            }
+            .addOnCompleteListener {
+                imageProxy.close()
+            }
+    }
+
+    fun switchAnalyze() {
+        _faceCamera.value = !_faceCamera.value
     }
 
     fun loadPoseClassifier() {
@@ -230,8 +273,16 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun switch() {
+        _frontCamera.value = !_frontCamera.value
+    }
+
+    fun start() {
+        _active.value = true
+    }
+
     fun stop() {
-        active = false
+        _active.value = false
         _detectedPose.value = null
         _classificationResult.value = ""
     }

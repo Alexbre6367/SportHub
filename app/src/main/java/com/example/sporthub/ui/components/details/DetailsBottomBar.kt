@@ -75,7 +75,6 @@ fun DetailsBottomBar(
     val authState by loginViewModel.authState.collectAsState()
     val isLoading = authState is AuthState.Loading
 
-
     Box(modifier = modifier.fillMaxSize()) {
         val backdrop = rememberLayerBackdrop {
             drawContent()
