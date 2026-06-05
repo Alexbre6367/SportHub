@@ -366,6 +366,10 @@ fun FaceBottomBar(
 
     val context = LocalContext.current
 
+    LaunchedEffect(Unit) {
+        cameraPermissions.launchPermissionRequest()
+    }
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {

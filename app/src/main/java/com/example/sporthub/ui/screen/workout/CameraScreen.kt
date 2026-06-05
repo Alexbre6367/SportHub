@@ -92,7 +92,7 @@ fun CameraScreen(
     onEndChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val cameraPermissions = rememberPermissionState(Manifest.permission.CAMERA)
+
     val pose by cameraViewModel.detectedPose.collectAsState()
     var timerJob by remember { mutableStateOf<Job?>(null) }
     val secondsLeft by timerViewModel.timerLeft.collectAsStateWithLifecycle()
@@ -124,6 +124,7 @@ fun CameraScreen(
     val dynamicRoundedCorner = with(density) { screenCornerRadius.toDp() }
     val finalCornerRadius = if (dynamicRoundedCorner > 0.dp) dynamicRoundedCorner else 42.dp
 
+    val cameraPermissions = rememberPermissionState(Manifest.permission.CAMERA)
     LaunchedEffect(Unit) {
         cameraPermissions.launchPermissionRequest()
     }
