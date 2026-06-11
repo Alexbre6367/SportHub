@@ -31,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -39,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.sporthub.ui.components.MainBottomBar
-import com.example.sporthub.ui.theme.OffWhite
+import com.example.sporthub.ui.components.baseGlass
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.FaceViewModel
@@ -48,10 +47,6 @@ import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.example.sporthub.ui.viewmodel.TimerViewModel
 import com.example.sporthub.ui.viewmodel.WorkoutViewModel
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun StrikeDay(
@@ -99,15 +94,7 @@ fun StrikeDay(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { RoundedCornerShape(0.dp) },
-                        effects = {
-                            vibrancy()
-                            blur(8.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        }
-                    )
+                    .baseGlass(backdrop, 8.dp, RoundedCornerShape(0.dp))
                     .background(Color.Black.copy(alpha = 0.2f))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -121,19 +108,7 @@ fun StrikeDay(
                     .navigationBarsPadding()
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { RoundedCornerShape(36.dp) },
-                        effects = {
-                            vibrancy()
-                            blur(30.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        },
-                        onDrawSurface = {
-                            drawRect(OffWhite, alpha = 0.6f, blendMode = BlendMode.Overlay)
-                            drawRect(OffWhite.copy(alpha = 0.7f))
-                        }
-                    )
+                    .baseGlass(backdrop, 30.dp, RoundedCornerShape(36.dp), drawRect = true)
                     .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
@@ -141,19 +116,7 @@ fun StrikeDay(
                 Box(
                     modifier = Modifier
                         .size(70.dp)
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { RoundedCornerShape(24.dp) },
-                            effects = {
-                                vibrancy()
-                                blur(34.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            },
-                            onDrawSurface = {
-                                drawRect(OffWhite, alpha = 0.6f, blendMode = BlendMode.Overlay)
-                                drawRect(OffWhite.copy(alpha = 0.7f))
-                            }
-                        ),
+                        .baseGlass(backdrop, 34.dp, RoundedCornerShape(24.dp), drawRect = true),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(

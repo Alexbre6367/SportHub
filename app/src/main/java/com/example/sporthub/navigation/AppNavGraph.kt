@@ -37,7 +37,7 @@ import com.example.sporthub.ui.screen.login.StartBottomBar
 import com.example.sporthub.ui.screen.login.WelcomeScreen
 import com.example.sporthub.ui.screen.workout.AddWorkoutBar
 import com.example.sporthub.ui.screen.workout.CameraTopAppBar
-import com.example.sporthub.ui.screen.workout.SelectionTopBar
+import com.example.sporthub.ui.screen.workout.SelectionBottomBar
 import com.example.sporthub.ui.viewmodel.CameraViewModel
 import com.example.sporthub.ui.viewmodel.FaceViewModel
 import com.example.sporthub.ui.viewmodel.GeminiViewModel
@@ -149,7 +149,7 @@ fun AppNavGraph(
             }
 
             composable(route = "selection_screen") {
-                SelectionTopBar(
+                SelectionBottomBar(
                     navController,
                     loginViewModel
                 )

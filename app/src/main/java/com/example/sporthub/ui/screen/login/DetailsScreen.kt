@@ -3,6 +3,7 @@ package com.example.sporthub.ui.screen.login
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Height
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Wc
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +30,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -42,10 +48,16 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import com.example.sporthub.ui.components.BottomBarContinue
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
+import com.example.sporthub.ui.viewmodel.AuthState
+import com.example.sporthub.ui.viewmodel.LoginViewModel
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -328,3 +340,72 @@ fun DetailsScreen(
     }
 }
 
+@Composable
+fun DetailsBottomBar(
+    navController: NavHostController,
+    loginViewModel: LoginViewModel,
+    weightState: String,
+    heightState: String,
+    onWeight: () -> Unit,
+    onHeight: () -> Unit,
+    openDialog: () -> Unit,
+    datePickerState: DatePickerState,
+    onWeightChange: (String) -> Unit,
+    onHeightChange: (String) -> Unit,
+    onAgeChange: (String) -> Unit,
+    birthdateState: String,
+    modifier: Modifier = Modifier
+) {
+    val userData by loginViewModel.currentUser.collectAsState()
+
+    var nameState by remember(userData) { mutableStateOf(userData?.name ?: "") }
+    var genderState by remember(userData) { mutableStateOf(userData?.gender ?: "") }
+
+    val isFormValid = nameState.isNotBlank() &&
+            genderState.isNotBlank() &&
+            weightState.isNotBlank() &&
+            heightState.isNotBlank() &&
+            birthdateState.isNotEmpty()
+
+    val authState by loginViewModel.authState.collectAsState()
+    val isLoading = authState is AuthState.Loading
+
+    Box(modifier = modifier.fillMaxSize()) {
+        val backdrop = rememberLayerBackdrop {
+            drawContent()
+        }
+
+        DetailsScreen(
+            nameState = nameState,
+            onNameChange = { nameState = it },
+            genderState = genderState,
+            onGenderChange = { genderState = it },
+            weightState = weightState,
+            heightState = heightState,
+            birthdateState = birthdateState,
+            modifier = Modifier.layerBackdrop(backdrop),
+            onWeight = onWeight,
+            onHeight = onHeight,
+            openDialog = openDialog,
+        )
+
+        BottomBarContinue(
+            backdrop,
+            navController = navController,
+            onClick = {
+                if (isFormValid) {
+                    val weight = weightState.toIntOrNull() ?: 0
+                    val height = heightState.toIntOrNull() ?: 0
+                    val birthdate = datePickerState.selectedDateMillis ?: userData?.birthdate ?: 0L
+
+                    loginViewModel.detailsUser(
+                        nameState, genderState, weight, height, birthdate
+                    )
+                    navController.navigate("start_screen")
+                }
+            },
+            modifier = Modifier.align(Alignment.BottomCenter),
+            isLoading = isLoading
+        )
+    }
+}

@@ -1,4 +1,4 @@
-package com.example.sporthub.ui.components.face.sensitive
+package com.example.sporthub.ui.components.face
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background

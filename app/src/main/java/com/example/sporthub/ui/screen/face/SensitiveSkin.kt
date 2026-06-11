@@ -39,7 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import com.example.sporthub.ui.components.face.sensitive.FaceComposition
+import com.example.sporthub.ui.components.baseGlass
+import com.example.sporthub.ui.components.face.FaceComposition
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.LightGray
 import com.example.sporthub.ui.theme.OffWhite
@@ -48,10 +49,6 @@ import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.FaceViewModel
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun SensitiveSkin(
@@ -162,15 +159,7 @@ fun SensitiveBottomBar(
         ) {
             Box(
                 modifier = Modifier
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        }
-                    )
+                    .baseGlass(backdrop)
                     .size(58.dp)
                     .clickable(
                         onClick = {

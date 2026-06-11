@@ -1,4 +1,4 @@
-package com.example.sporthub.ui.components.face.statistics
+package com.example.sporthub.ui.components.face
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize

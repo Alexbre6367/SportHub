@@ -34,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.sporthub.ui.components.baseGlass
+import com.example.sporthub.ui.screen.login.DetailsBottomBar
 import com.example.sporthub.ui.theme.LightGray
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
@@ -41,10 +43,6 @@ import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 import com.sd.lib.compose.wheel_picker.FVerticalWheelPicker
 import com.sd.lib.compose.wheel_picker.FWheelPickerState
 import com.sd.lib.compose.wheel_picker.rememberFWheelPickerState
@@ -196,129 +194,35 @@ fun WeightInput(
     onDismiss: () -> Unit,
     backdrop: Backdrop
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .drawBackdrop(
-                backdrop = backdrop,
-                shape = { RoundedCornerShape(0.dp) },
-                effects = {
-                    vibrancy()
-                    blur(8.dp.toPx())
-                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                }
-            )
-            .background(Color.Black.copy(alpha = 0.2f))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onDismiss
-            )
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 20.dp, vertical = 8.dp)
-                .navigationBarsPadding()
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { RoundedCornerShape(36.dp) },
-                    effects = {
-                        vibrancy()
-                        blur(30.dp.toPx())
-                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                    }
-                )
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Log weight",
-                color = black,
-                style = MaterialTheme.typography.titleLarge,
-                fontSize = 18.sp
-            )
-
-            Spacer(Modifier.height(20.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(170.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .height(32.dp)
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { RoundedCornerShape(24.dp) },
-                            effects = {
-                                vibrancy()
-                                blur(8.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            },
-                        )
-                )
-
-                FVerticalWheelPicker(
-                    count = 101,
-                    state = pickerState,
-                    modifier = Modifier.fillMaxWidth(),
-                    itemHeight = 24.dp,
-                    unfocusedCount = 3
-                ) { index ->
-                    val currentWeight = index + 30
-                    val isFocused = index == pickerState.currentIndex
-                    Text(
-                        text = "$currentWeight kg",
-                        color = if (isFocused) black else gray.copy(alpha = 0.4f),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontSize = if (isFocused) 20.sp else 18.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-            Text(
-                text = "MINIMUM ALLOWED WEIGHT IS 30KG",
-                color = LightGray,
-                style = MaterialTheme.typography.titleLarge,
-                fontSize = 14.sp
-            )
-
-            Spacer(Modifier.height(20.dp))
-            Box(
-                modifier = Modifier
-                    .height(58.dp)
-                    .fillMaxWidth()
-                    .clickable(
-                        onClick = {
-                            onWeightChange((pickerState.currentIndex + 30).toString())
-                            onDismiss()
-                        },
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    )
-                    .background(
-                        color = black,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
+    BoxGlass(
+        backdrop,
+        onClick = {
+            onWeightChange((pickerState.currentIndex + 30).toString())
+            onDismiss()
+        },
+        onDismiss,
+        textCard = "Log weight",
+        textCaps = "MINIMUM ALLOWED WEIGHT IS 30KG",
+        content = {
+            FVerticalWheelPicker(
+                count = 101,
+                state = pickerState,
+                modifier = Modifier.fillMaxWidth(),
+                itemHeight = 24.dp,
+                unfocusedCount = 3
+            ) { index ->
+                val currentWeight = index + 30
+                val isFocused = index == pickerState.currentIndex
                 Text(
-                    text = "Continue",
-                    color = Color.White,
+                    text = "$currentWeight kg",
+                    color = if (isFocused) black else gray.copy(alpha = 0.4f),
                     style = MaterialTheme.typography.titleLarge,
-                    fontSize = 18.sp
+                    fontSize = if (isFocused) 20.sp else 18.sp,
+                    textAlign = TextAlign.Center
                 )
             }
         }
-    }
+    )
 }
 
 @Composable
@@ -328,129 +232,35 @@ fun HeightInput(
     onDismiss: () -> Unit,
     backdrop: Backdrop
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .drawBackdrop(
-                backdrop = backdrop,
-                shape = { RoundedCornerShape(0.dp) },
-                effects = {
-                    vibrancy()
-                    blur(8.dp.toPx())
-                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                }
-            )
-            .background(Color.Black.copy(alpha = 0.2f))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onDismiss
-            )
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 20.dp, vertical = 8.dp)
-                .navigationBarsPadding()
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { RoundedCornerShape(36.dp) },
-                    effects = {
-                        vibrancy()
-                        blur(30.dp.toPx())
-                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                    }
-                )
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Log height",
-                color = black,
-                style = MaterialTheme.typography.titleLarge,
-                fontSize = 18.sp
-            )
-
-            Spacer(Modifier.height(20.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(170.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .height(32.dp)
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { RoundedCornerShape(24.dp) },
-                            effects = {
-                                vibrancy()
-                                blur(8.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            },
-                        )
-                )
-
-                FVerticalWheelPicker(
-                    count = 121,
-                    state = pickerState,
-                    modifier = Modifier.fillMaxWidth(),
-                    itemHeight = 24.dp,
-                    unfocusedCount = 3
-                ) { index ->
-                    val currentHeight = index + 100
-                    val isFocused = index == pickerState.currentIndex
-                    Text(
-                        text = "$currentHeight cm",
-                        color = if (isFocused) black else gray.copy(alpha = 0.4f),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontSize = if (isFocused) 20.sp else 18.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-            Text(
-                text = "MINIMUM ALLOWED HEIGHT IS 100CM",
-                color = LightGray,
-                style = MaterialTheme.typography.titleLarge,
-                fontSize = 14.sp
-            )
-
-            Spacer(Modifier.height(20.dp))
-            Box(
-                modifier = Modifier
-                    .height(58.dp)
-                    .fillMaxWidth()
-                    .clickable(
-                        onClick = {
-                            onHeightChange((pickerState.currentIndex + 100).toString())
-                            onDismiss()
-                        },
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    )
-                    .background(
-                        color = black,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
+    BoxGlass(
+        backdrop,
+        onClick = {
+            onHeightChange((pickerState.currentIndex + 100).toString())
+            onDismiss()
+        },
+        onDismiss,
+        textCard = "Log height",
+        textCaps = "MINIMUM ALLOWED HEIGHT IS 100CM",
+        content = {
+            FVerticalWheelPicker(
+                count = 121,
+                state = pickerState,
+                modifier = Modifier.fillMaxWidth(),
+                itemHeight = 24.dp,
+                unfocusedCount = 3
+            ) { index ->
+                val currentHeight = index + 100
+                val isFocused = index == pickerState.currentIndex
                 Text(
-                    text = "Continue",
-                    color = Color.White,
+                    text = "$currentHeight cm",
+                    color = if (isFocused) black else gray.copy(alpha = 0.4f),
                     style = MaterialTheme.typography.titleLarge,
-                    fontSize = 18.sp
+                    fontSize = if (isFocused) 20.sp else 18.sp,
+                    textAlign = TextAlign.Center
                 )
             }
         }
-    }
+    )
 }
 
 @Composable
@@ -476,18 +286,109 @@ fun AgeInput(
         }
     }
 
+    BoxGlass(
+        backdrop,
+        onClick = {
+            val day = pickerStateDay.currentIndex + 1
+            val month = pickerStateMonth.currentIndex
+            val year = pickerStateYear.currentIndex + 1927
+
+            val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                set(Calendar.YEAR, year)
+                set(Calendar.MONTH, month)
+                set(Calendar.DAY_OF_MONTH, day)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+
+            datePickerState.selectedDateMillis = calendar.timeInMillis
+
+            val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            onAgeChange(sdf.format(calendar.time))
+            onDismiss()
+        },
+        onDismiss,
+        textCard = "Log age",
+        textCaps = "MINIMUM ALLOWED YEAR IS 2010",
+        content = {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FVerticalWheelPicker(
+                    count = daysInMonth,
+                    state = pickerStateDay,
+                    modifier = Modifier.weight(1f),
+                    itemHeight = 24.dp,
+                    unfocusedCount = 3
+                ) { index ->
+                    val currentDay = index + 1
+                    val isFocused = index == pickerStateDay.currentIndex
+                    Text(
+                        text = "$currentDay",
+                        color = if (isFocused) black else gray.copy(alpha = 0.4f),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = if (isFocused) 20.sp else 18.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                FVerticalWheelPicker(
+                    count = 12,
+                    state = pickerStateMonth,
+                    modifier = Modifier.weight(1f),
+                    itemHeight = 24.dp,
+                    unfocusedCount = 3
+                ) { index ->
+                    val currentMonth = index + 1
+                    val isFocused = index == pickerStateMonth.currentIndex
+                    Text(
+                        text = "$currentMonth",
+                        color = if (isFocused) black else gray.copy(alpha = 0.4f),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = if (isFocused) 20.sp else 18.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                FVerticalWheelPicker(
+                    count = 84,
+                    state = pickerStateYear,
+                    modifier = Modifier.weight(1f),
+                    itemHeight = 24.dp,
+                    unfocusedCount = 3
+                ) { index ->
+                    val currentYear = index + 1927
+                    val isFocused = index == pickerStateYear.currentIndex
+                    Text(
+                        text = "$currentYear",
+                        color = if (isFocused) black else gray.copy(alpha = 0.4f),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = if (isFocused) 20.sp else 18.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    )
+}
+
+@Composable
+fun BoxGlass(
+    backdrop: Backdrop,
+    onClick: () -> Unit,
+    onDismiss: () -> Unit,
+    textCard: String,
+    textCaps: String,
+    content: @Composable () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .drawBackdrop(
-                backdrop = backdrop,
-                shape = { RoundedCornerShape(0.dp) },
-                effects = {
-                    vibrancy()
-                    blur(8.dp.toPx())
-                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                }
-            )
+            .baseGlass(backdrop, blur = 8.dp, shape = RoundedCornerShape(0.dp))
             .background(Color.Black.copy(alpha = 0.2f))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -501,21 +402,13 @@ fun AgeInput(
                 .navigationBarsPadding()
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { RoundedCornerShape(36.dp) },
-                    effects = {
-                        vibrancy()
-                        blur(30.dp.toPx())
-                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                    }
-                )
+                .baseGlass(backdrop, blur = 30.dp, shape = RoundedCornerShape(36.dp))
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Log age",
+                text = textCard,
                 color = black,
                 style = MaterialTheme.typography.titleLarge,
                 fontSize = 18.sp
@@ -533,81 +426,15 @@ fun AgeInput(
                         .height(32.dp)
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp)
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { RoundedCornerShape(24.dp) },
-                            effects = {
-                                vibrancy()
-                                blur(8.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            },
-                        )
+                        .baseGlass(backdrop, blur = 8.dp, shape = RoundedCornerShape(24.dp)),
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    FVerticalWheelPicker(
-                        count = daysInMonth,
-                        state = pickerStateDay,
-                        modifier = Modifier.weight(1f),
-                        itemHeight = 24.dp,
-                        unfocusedCount = 3
-                    ) { index ->
-                        val currentDay = index + 1
-                        val isFocused = index == pickerStateDay.currentIndex
-                        Text(
-                            text = "$currentDay",
-                            color = if (isFocused) black else gray.copy(alpha = 0.4f),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontSize = if (isFocused) 20.sp else 18.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    FVerticalWheelPicker(
-                        count = 12,
-                        state = pickerStateMonth,
-                        modifier = Modifier.weight(1f),
-                        itemHeight = 24.dp,
-                        unfocusedCount = 3
-                    ) { index ->
-                        val currentMonth = index + 1
-                        val isFocused = index == pickerStateMonth.currentIndex
-                        Text(
-                            text = "$currentMonth",
-                            color = if (isFocused) black else gray.copy(alpha = 0.4f),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontSize = if (isFocused) 20.sp else 18.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    FVerticalWheelPicker(
-                        count = 84,
-                        state = pickerStateYear,
-                        modifier = Modifier.weight(1f),
-                        itemHeight = 24.dp,
-                        unfocusedCount = 3
-                    ) { index ->
-                        val currentYear = index + 1927
-                        val isFocused = index == pickerStateYear.currentIndex
-                        Text(
-                            text = "$currentYear",
-                            color = if (isFocused) black else gray.copy(alpha = 0.4f),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontSize = if (isFocused) 20.sp else 18.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
+                content()
             }
 
             Spacer(Modifier.height(20.dp))
             Text(
-                text = "MINIMUM ALLOWED YEAR IS 2010",
+                text = textCaps,
                 color = LightGray,
                 style = MaterialTheme.typography.titleLarge,
                 fontSize = 14.sp
@@ -619,27 +446,7 @@ fun AgeInput(
                     .height(58.dp)
                     .fillMaxWidth()
                     .clickable(
-                        onClick = {
-                            val day = pickerStateDay.currentIndex + 1
-                            val month = pickerStateMonth.currentIndex
-                            val year = pickerStateYear.currentIndex + 1927
-
-                            val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
-                                set(Calendar.YEAR, year)
-                                set(Calendar.MONTH, month)
-                                set(Calendar.DAY_OF_MONTH, day)
-                                set(Calendar.HOUR_OF_DAY, 0)
-                                set(Calendar.MINUTE, 0)
-                                set(Calendar.SECOND, 0)
-                                set(Calendar.MILLISECOND, 0)
-                            }
-
-                            datePickerState.selectedDateMillis = calendar.timeInMillis
-
-                            val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-                            onAgeChange(sdf.format(calendar.time))
-                            onDismiss()
-                        },
+                        onClick = onClick,
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
                     )

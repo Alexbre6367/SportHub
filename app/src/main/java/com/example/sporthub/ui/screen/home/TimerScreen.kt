@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -65,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.sporthub.ui.components.baseGlass
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.LightGray
 import com.example.sporthub.ui.theme.OffWhite
@@ -75,10 +75,6 @@ import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.example.sporthub.ui.viewmodel.TimerViewModel
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 import com.sd.lib.compose.wheel_picker.FVerticalWheelPicker
 import com.sd.lib.compose.wheel_picker.rememberFWheelPickerState
 
@@ -120,16 +116,7 @@ fun TimerScreen(
         TimerRing(
             secondsLeft = secondsLeft,
             totalSeconds = totalSeconds,
-            modifier = Modifier
-                .drawBackdrop(
-                    backdrop = rememberLayerBackdrop(),
-                    shape = { RoundedCornerShape(72.dp) },
-                    effects = {
-                        vibrancy()
-                        blur(2f.dp.toPx())
-                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                    }
-                ),
+            modifier = Modifier.baseGlass(rememberLayerBackdrop(), shape = RoundedCornerShape(72.dp)),
             onPauseClick = {
                 timerViewModel.resetTimer(context)
             }
@@ -349,15 +336,7 @@ fun TimerGlassBottomBar(
         ) {
             Row(
                 modifier = Modifier
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        }
-                    )
+                    .baseGlass(rememberLayerBackdrop())
                     .width(200.dp)
                     .fillMaxHeight()
                     .padding(4.dp)
@@ -420,15 +399,7 @@ fun TimerGlassBottomBar(
 
             Column(
                 modifier = Modifier
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        }
-                    )
+                    .baseGlass(rememberLayerBackdrop())
                     .clickable { navController.navigate("gemini_screen") }
                     .aspectRatio(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -532,14 +503,7 @@ fun TimerRing(
                 tint = Color.White,
                 modifier = Modifier
                     .size(100.dp)
-                    .drawBackdrop(
-                        backdrop = rememberLayerBackdrop(),
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        })
+                    .baseGlass(rememberLayerBackdrop())
                     .padding(10.dp)
             )
         }

@@ -24,18 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.sporthub.ui.theme.OffWhite
+import com.example.sporthub.ui.components.baseGlass
 import com.example.sporthub.ui.theme.gray
 import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun NoPermissions(
@@ -48,19 +43,7 @@ fun NoPermissions(
             .padding(horizontal = 20.dp)
             .height(180.dp)
             .fillMaxWidth()
-            .drawBackdrop(
-                backdrop = backdrop,
-                shape = { RoundedCornerShape(24.dp) },
-                effects = {
-                    vibrancy()
-                    blur(2f.dp.toPx())
-                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                },
-                onDrawSurface = {
-                    drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                    drawRect(OffWhite.copy(alpha = 0.5f))
-                }
-            )
+            .baseGlass(backdrop, shape = RoundedCornerShape(24.dp), drawRect = true)
             .clickable(
                 onClick = {
                     val intent =

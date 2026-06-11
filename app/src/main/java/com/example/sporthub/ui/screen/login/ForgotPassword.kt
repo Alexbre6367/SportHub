@@ -1,30 +1,20 @@
 package com.example.sporthub.ui.screen.login
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -48,6 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.sporthub.ui.components.BottomBarContinue
 import com.example.sporthub.ui.components.DialogScreen
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.OffWhite
@@ -56,10 +47,6 @@ import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun ForgotPasswordScreen(
@@ -188,86 +175,18 @@ fun ForgotPasswordBottomBar(
         )
 
 
-        Row(
-            modifier = Modifier
-                .navigationBarsPadding()
-                .imePadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        }
-                    )
-                    .size(58.dp)
-                    .clickable(
-                        onClick = {
-                            navController.popBackStack()
-                        },
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBackIosNew,
-                    contentDescription = null,
-                    tint = gray,
-                    modifier = Modifier.size(24.dp)
+        BottomBarContinue(
+            backdrop,
+            navController = navController,
+            onClick = {
+                loginViewModel.resetPassword(
+                    context,
+                    emailState.value,
+                    onSuccess = { dialogScreen = true }
                 )
-            }
-
-            Box(
-                modifier = Modifier
-                    .padding(start = 12.dp)
-                    .height(58.dp)
-                    .weight(1f)
-                    .clickable(
-                        enabled = !isResetPassword,
-                        onClick = {
-                            loginViewModel.resetPassword(
-                                context,
-                                emailState.value,
-                                onSuccess = { dialogScreen = true })
-                        },
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    )
-                    .background(
-                        color = black,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                AnimatedContent(
-                    targetState = isResetPassword,
-                    label = "loading_animation",
-                ) { targetIsReset ->
-                    if (targetIsReset) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(
-                            text = "Continue",
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontSize = 18.sp
-                        )
-                    }
-                }
-            }
-        }
+            },
+            modifier = Modifier.align(Alignment.BottomCenter),
+            isLoading = isResetPassword
+        )
     }
 }

@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -54,10 +53,6 @@ import com.example.sporthub.ui.viewmodel.TimerViewModel
 import com.example.sporthub.ui.viewmodel.WorkoutViewModel
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 import kotlinx.coroutines.launch
 
 @Composable
@@ -135,11 +130,7 @@ fun MainBottomBar(
         ) {
             Row(
                 modifier = Modifier
-                    .drawBackdrop(backdrop = backdrop, shape = { CircleShape }, effects = {
-                        vibrancy()
-                        blur(2f.dp.toPx())
-                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                    })
+                    .baseGlass(backdrop)
                     .width(200.dp)
                     .fillMaxHeight()
                     .padding(4.dp)
@@ -158,11 +149,7 @@ fun MainBottomBar(
                                     )
                                 }
                             }
-                            .drawBackdrop(backdrop = backdrop, shape = { CircleShape }, effects = {
-                                vibrancy()
-                                blur(4f.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            })
+                            .baseGlass(backdrop, 4.dp)
                     )
 
                     Row(modifier = Modifier.fillMaxSize()) {
@@ -239,15 +226,7 @@ fun MainBottomBar(
 
             Column(
                 modifier = Modifier
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        }
-                    )
+                    .baseGlass(backdrop)
                     .clickable { navController.navigate("gemini_screen") }
                     .aspectRatio(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,

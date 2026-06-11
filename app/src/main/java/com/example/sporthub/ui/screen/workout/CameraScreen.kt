@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.example.sporthub.ui.components.baseGlass
 import com.example.sporthub.ui.components.camera.CameraPreviewContent
 import com.example.sporthub.ui.components.camera.NoPermissions
 import com.example.sporthub.ui.components.camera.PoseDetector
@@ -69,6 +70,7 @@ import com.example.sporthub.ui.viewmodel.TimerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
@@ -184,19 +186,7 @@ fun CameraScreen(
                         .fillMaxWidth()
                         .heightIn(58.dp)
                         .weight(1f)
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { CircleShape },
-                            effects = {
-                                vibrancy()
-                                blur(2f.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            },
-                            onDrawSurface = {
-                                drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                                drawRect(OffWhite.copy(alpha = 0.5f))
-                            }
-                        )
+                        .baseGlass(backdrop, drawRect = true)
                         .padding(horizontal = 18.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
@@ -227,19 +217,7 @@ fun CameraScreen(
                 Spacer(Modifier.width(12.dp))
                 Box(
                     modifier = Modifier
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { CircleShape },
-                            effects = {
-                                vibrancy()
-                                blur(2f.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            },
-                            onDrawSurface = {
-                                drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                                drawRect(OffWhite.copy(alpha = 0.5f))
-                            }
-                        )
+                        .baseGlass(backdrop, drawRect = true)
                         .size(58.dp)
                         .clickable(
                             onClick = {
@@ -339,19 +317,7 @@ fun CameraTopAppBar(
         ) {
             Box(
                 modifier = Modifier
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        },
-                        onDrawSurface = {
-                            drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                            drawRect(OffWhite.copy(alpha = 0.5f))
-                        }
-                    )
+                    .baseGlass(backdrop, drawRect = true)
                     .size(58.dp)
                     .clickable(
                         onClick = {
@@ -375,19 +341,7 @@ fun CameraTopAppBar(
                 modifier = Modifier
                     .height(58.dp)
                     .weight(1f)
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        },
-                        onDrawSurface = {
-                            drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                            drawRect(OffWhite.copy(alpha = 0.5f))
-                        }
-                    ),
+                    .baseGlass(backdrop, drawRect = true),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -401,19 +355,7 @@ fun CameraTopAppBar(
             Spacer(Modifier.width(12.dp))
             Box(
                 modifier = Modifier
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        },
-                        onDrawSurface = {
-                            drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                            drawRect(OffWhite.copy(alpha = 0.5f))
-                        }
-                    )
+                    .baseGlass(backdrop, drawRect = true)
                     .size(58.dp)
                     .clickable(
                         onClick = { cameraViewModel.switch() },
@@ -440,19 +382,7 @@ fun CameraTopAppBar(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { CircleShape },
-                            effects = {
-                                vibrancy()
-                                blur(2f.dp.toPx())
-                                lens(32f.dp.toPx(), 64f.dp.toPx())
-                            },
-                            onDrawSurface = {
-                                drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                                drawRect(OffWhite.copy(alpha = 0.5f))
-                            }
-                        )
+                        .cameraBlurGlass(backdrop)
                 )
                 Text(
                     text = timerViewModel.cameraFormatTime(secondsLeft),
@@ -471,19 +401,7 @@ fun CameraTopAppBar(
                     .padding(horizontal = 20.dp)
                     .height(180.dp)
                     .fillMaxWidth()
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { RoundedCornerShape(24.dp) },
-                        effects = {
-                            vibrancy()
-                            blur(8f.dp.toPx())
-                            lens(32.dp.toPx(), 64.dp.toPx())
-                        },
-                        onDrawSurface = {
-                            drawRect(OffWhite, alpha = 0.5f, blendMode = BlendMode.Overlay)
-                            drawRect(OffWhite.copy(alpha = 0.5f))
-                        }
-                    )
+                    .cameraBlurGlass(backdrop)
                     .padding(20.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -498,3 +416,19 @@ fun CameraTopAppBar(
         }
     }
 }
+
+fun Modifier.cameraBlurGlass(backdrop: Backdrop) : Modifier = this
+    .drawBackdrop(
+        backdrop = backdrop,
+        shape = { CircleShape },
+        effects = {
+            vibrancy()
+            blur(2f.dp.toPx())
+            lens(32f.dp.toPx(), 64f.dp.toPx())
+        },
+        onDrawSurface = {
+            drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
+            drawRect(OffWhite.copy(alpha = 0.5f))
+        }
+    )
+

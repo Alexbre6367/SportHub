@@ -14,10 +14,10 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -48,7 +49,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
@@ -60,6 +60,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.sporthub.ui.components.baseGlass
 import com.example.sporthub.ui.components.chat.EmptyStateGemini
 import com.example.sporthub.ui.components.chat.MessageBox
 import com.example.sporthub.ui.theme.LightBlue
@@ -70,10 +71,6 @@ import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.example.sporthub.utils.toBitmap
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun GeminiScreen(
@@ -199,19 +196,7 @@ fun GeminiBar(
         ) {
             Box(
                 modifier = Modifier
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        },
-                        onDrawSurface = {
-                            drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                            drawRect(OffWhite.copy(alpha = 0.5f))
-                        }
-                    )
+                    .baseGlass(backdrop, drawRect = true)
                     .size(58.dp)
                     .clickable(
                         onClick = {
@@ -235,19 +220,7 @@ fun GeminiBar(
                 modifier = Modifier
                     .height(58.dp)
                     .weight(1f)
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        },
-                        onDrawSurface = {
-                            drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                            drawRect(OffWhite.copy(alpha = 0.5f))
-                        }
-                    ),
+                    .baseGlass(backdrop, drawRect = true),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -272,19 +245,7 @@ fun GeminiBar(
                     modifier = Modifier
                         .width(116.dp)
                         .height(58.dp)
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { CircleShape },
-                            effects = {
-                                vibrancy()
-                                blur(2f.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            },
-                            onDrawSurface = {
-                                drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                                drawRect(OffWhite.copy(alpha = 0.5f))
-                            }
-                        )
+
                         .padding(4.dp)
                         .align(Alignment.Start),
                     contentAlignment = Alignment.Center
@@ -296,28 +257,14 @@ fun GeminiBar(
                         contentScale = ContentScale.Crop
                     )
                 }
+                Spacer(Modifier.height(12.dp))
             }
 
-            Spacer(Modifier.height(12.dp))
-            Row(verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .heightIn(min = 58.dp)
                         .weight(1f)
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { CircleShape },
-                            effects = {
-                                vibrancy()
-                                blur(2f.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            },
-                            onDrawSurface = {
-                                drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                                drawRect(OffWhite.copy(alpha = 0.5f))
-                            }
-                        ),
+                        .baseGlass(backdrop, shape = RoundedCornerShape(36.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     BasicTextField(
@@ -325,7 +272,6 @@ fun GeminiBar(
                         onValueChange = { promptText = it },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 10.dp)
                             .padding(start = 10.dp, end = 20.dp),
                         textStyle = MaterialTheme.typography.titleLarge.copy(
                             fontSize = 18.sp,
@@ -336,29 +282,14 @@ fun GeminiBar(
                         cursorBrush = SolidColor(gray),
                         decorationBox = { innerTextField ->
                             Row(
+                                Modifier.defaultMinSize(minHeight = 58.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Start
                             ) {
                                 Box(
                                     modifier = Modifier
                                         .size(40.dp)
-                                        .drawBackdrop(
-                                            backdrop = backdrop,
-                                            shape = { CircleShape },
-                                            effects = {
-                                                vibrancy()
-                                                blur(2f.dp.toPx())
-                                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                                            },
-                                            onDrawSurface = {
-                                                drawRect(
-                                                    OffWhite,
-                                                    alpha = 0.4f,
-                                                    blendMode = BlendMode.Overlay
-                                                )
-                                                drawRect(OffWhite.copy(alpha = 0.5f))
-                                            }
-                                        )
+                                        .baseGlass(backdrop)
                                         .clickable(
                                             onClick = {
                                                 if (loadedBitmap != null) {
@@ -407,19 +338,7 @@ fun GeminiBar(
                 Spacer(Modifier.width(12.dp))
                 Box(
                     modifier = Modifier
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { CircleShape },
-                            effects = {
-                                vibrancy()
-                                blur(2f.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            },
-                            onDrawSurface = {
-                                drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                                drawRect(OffWhite.copy(alpha = 0.5f))
-                            }
-                        )
+                        .baseGlass(backdrop)
                         .size(58.dp)
                         .clickable(
                             onClick = {

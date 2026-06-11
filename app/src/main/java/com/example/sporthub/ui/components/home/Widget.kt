@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face3
@@ -35,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.sporthub.ui.components.baseGlass
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.LightGray
 import com.example.sporthub.ui.theme.LightPurple
@@ -43,10 +43,6 @@ import com.example.sporthub.ui.theme.activityRedStart
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.viewmodel.FaceViewModel
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun Widget(
@@ -92,15 +88,7 @@ fun Widget(
                     Box(
                         modifier = Modifier
                             .size(50.dp)
-                            .drawBackdrop(
-                                backdrop = rememberLayerBackdrop(),
-                                shape = { CircleShape },
-                                effects = {
-                                    vibrancy()
-                                    blur(2f.dp.toPx())
-                                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                                }
-                            ),
+                            .baseGlass(rememberLayerBackdrop()),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -136,15 +124,7 @@ fun Widget(
                     Box(
                         modifier = Modifier
                             .size(50.dp)
-                            .drawBackdrop(
-                                backdrop = rememberLayerBackdrop(),
-                                shape = { CircleShape },
-                                effects = {
-                                    vibrancy()
-                                    blur(2f.dp.toPx())
-                                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                                }
-                            ),
+                            .baseGlass(rememberLayerBackdrop()),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -180,15 +160,7 @@ fun Widget(
                     Box(
                         modifier = Modifier
                             .size(50.dp)
-                            .drawBackdrop(
-                                backdrop = rememberLayerBackdrop(),
-                                shape = { CircleShape },
-                                effects = {
-                                    vibrancy()
-                                    blur(2f.dp.toPx())
-                                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                                }
-                            ),
+                            .baseGlass(rememberLayerBackdrop()),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -218,15 +190,7 @@ fun Widget(
                     modifier = Modifier
                         .fillMaxHeight()
                         .size(140.dp)
-                        .drawBackdrop(
-                            backdrop = rememberLayerBackdrop(),
-                            shape = { RoundedCornerShape(24.dp) },
-                            effects = {
-                                vibrancy()
-                                blur(2f.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            }
-                        )
+                        .baseGlass(rememberLayerBackdrop(), shape = RoundedCornerShape(24.dp))
                         .clickable(
                             onClick = { navController.navigate("face_statistics_screen") },
                             indication = null,

@@ -51,7 +51,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -66,6 +65,7 @@ import androidx.navigation.NavController
 import com.example.sporthub.data.sporthub.ExerciseEntity
 import com.example.sporthub.data.sporthub.WorkoutEntity
 import com.example.sporthub.data.sporthub.WorkoutWithExercises
+import com.example.sporthub.ui.components.baseGlass
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
@@ -74,10 +74,6 @@ import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.WorkoutViewModel
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -223,19 +219,7 @@ fun AddWorkoutBar(
                 modifier = Modifier
                     .fillMaxHeight()
                     .weight(1f)
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        },
-                        onDrawSurface = {
-                            drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                            drawRect(OffWhite.copy(alpha = 0.5f))
-                        }
-                    ),
+                    .baseGlass(backdrop, drawRect = true),
                 contentAlignment = Alignment.CenterStart
             ) {
                 BasicTextField(
@@ -272,19 +256,7 @@ fun AddWorkoutBar(
             Spacer(Modifier.width(12.dp))
             Row(
                 modifier = Modifier
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        },
-                        onDrawSurface = {
-                            drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                            drawRect(OffWhite.copy(alpha = 0.5f))
-                        }
-                    )
+                    .baseGlass(backdrop, drawRect = true)
                     .size(58.dp)
                     .clickable(
                         onClick = {
@@ -339,15 +311,7 @@ fun AddWorkoutBar(
         ) {
             Box(
                 modifier = Modifier
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { CircleShape },
-                        effects = {
-                            vibrancy()
-                            blur(2f.dp.toPx())
-                            lens(16f.dp.toPx(), 32f.dp.toPx())
-                        }
-                    )
+                    .baseGlass(backdrop)
                     .size(58.dp)
                     .clickable(
                         onClick = {
@@ -451,11 +415,7 @@ fun Exercises(
         Box(
             modifier = Modifier
                 .height(48.dp)
-                .drawBackdrop(
-                    backdrop = rememberLayerBackdrop(),
-                    shape = { RoundedCornerShape(18.dp) },
-                    effects = { }
-                ),
+                .baseGlass(rememberLayerBackdrop(), shape = RoundedCornerShape(18.dp)),
             contentAlignment = Alignment.CenterStart
         ) {
             BasicTextField(
@@ -514,11 +474,7 @@ fun Exercises(
                     modifier = Modifier
                         .height(48.dp)
                         .fillMaxWidth()
-                        .drawBackdrop(
-                            backdrop = rememberLayerBackdrop(),
-                            shape = { RoundedCornerShape(18.dp) },
-                            effects = { }
-                        ),
+                        .baseGlass(rememberLayerBackdrop(), shape = RoundedCornerShape(18.dp)),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     BasicTextField(
@@ -576,11 +532,7 @@ fun Exercises(
                     modifier = Modifier
                         .height(48.dp)
                         .fillMaxWidth()
-                        .drawBackdrop(
-                            backdrop = rememberLayerBackdrop(),
-                            shape = { RoundedCornerShape(18.dp) },
-                            effects = { }
-                        ),
+                        .baseGlass(rememberLayerBackdrop(), shape = RoundedCornerShape(18.dp)),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     BasicTextField(
@@ -638,11 +590,7 @@ fun Exercises(
                     modifier = Modifier
                         .height(48.dp)
                         .fillMaxWidth()
-                        .drawBackdrop(
-                            backdrop = rememberLayerBackdrop(),
-                            shape = { RoundedCornerShape(18.dp) },
-                            effects = { }
-                        ),
+                        .baseGlass(rememberLayerBackdrop(), shape = RoundedCornerShape(18.dp)),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     BasicTextField(

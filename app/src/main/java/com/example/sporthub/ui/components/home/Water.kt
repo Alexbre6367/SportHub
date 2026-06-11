@@ -44,11 +44,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.sporthub.ui.components.baseGlass
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.viewmodel.HomeViewModel
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
 import kotlin.math.sin
 
 @Composable
@@ -84,11 +84,7 @@ fun WaterButton(
     Box(
         modifier = Modifier
             .size(120.dp)
-            .drawBackdrop(
-                backdrop = rememberLayerBackdrop(),
-                shape = { CircleShape },
-                effects = { }
-            )
+            .baseGlass(rememberLayerBackdrop(), effects = false)
             .clip(CircleShape)
             .clickable(
                 onClick = { onAddClick() },
@@ -187,11 +183,7 @@ fun WaterTarget(
             ) {
                 Box(
                     modifier = Modifier
-                        .drawBackdrop(
-                            backdrop = rememberLayerBackdrop(),
-                            shape = { CircleShape },
-                            effects = { }
-                        )
+                        .baseGlass(rememberLayerBackdrop(), effects = false)
                         .height(40.dp)
                         .width(130.dp)
                         .clip(CircleShape),
@@ -208,11 +200,7 @@ fun WaterTarget(
                 Spacer(Modifier.width(8.dp))
                 Box(
                     modifier = Modifier
-                        .drawBackdrop(
-                            backdrop = rememberLayerBackdrop(),
-                            shape = { CircleShape },
-                            effects = { }
-                        )
+                        .baseGlass(rememberLayerBackdrop(), effects = false)
                         .size(40.dp)
                         .clip(CircleShape),
                     contentAlignment = Alignment.Center

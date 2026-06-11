@@ -13,17 +13,14 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Person
@@ -52,6 +49,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.sporthub.ui.components.BottomBarContinue
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
@@ -59,10 +57,6 @@ import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun StartScreen(
@@ -412,67 +406,15 @@ fun StartBottomBar(
             modifier = Modifier.layerBackdrop(backdrop)
         )
 
-        Row(
-            modifier = Modifier
-                .navigationBarsPadding()
-                .imePadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(58.dp)
-                    .drawBackdrop(backdrop = rememberLayerBackdrop(), shape = { CircleShape }, effects = {
-                        vibrancy()
-                        blur(2f.dp.toPx())
-                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                    })
-                    .clickable(
-                        onClick = {
-                            navController.popBackStack()
-                        },
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBackIosNew,
-                    contentDescription = null,
-                    tint = gray,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .height(58.dp)
-                    .weight(1f)
-                    .padding(start = 12.dp)
-                    .clickable(
-                        onClick = {
-                            loginViewModel.version(selectedIndex)
-                            loginViewModel.loadUserData()
-                            navController.navigate("home_screen/0")
-                        },
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    )
-                    .background(
-                        color = black,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Continue",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 18.sp
-                )
-            }
-        }
+        BottomBarContinue(
+            backdrop,
+            navController = navController,
+            onClick = {
+                loginViewModel.version(selectedIndex)
+                loginViewModel.loadUserData()
+                navController.navigate("home_screen/0")
+            },
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }

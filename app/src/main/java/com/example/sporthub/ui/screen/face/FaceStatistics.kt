@@ -53,7 +53,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -64,10 +63,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
+import com.example.sporthub.ui.components.baseGlass
 import com.example.sporthub.ui.components.camera.CameraPreviewContent
 import com.example.sporthub.ui.components.camera.NoPermissions
-import com.example.sporthub.ui.components.face.statistics.FaceDetector
-import com.example.sporthub.ui.theme.AccountGray
+import com.example.sporthub.ui.components.face.FaceDetector
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.LightGray
 import com.example.sporthub.ui.theme.OffWhite
@@ -80,10 +79,6 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -194,19 +189,7 @@ fun FaceTopAppBar(
                     modifier = Modifier
                         .height(58.dp)
                         .weight(1f)
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { CircleShape },
-                            effects = {
-                                vibrancy()
-                                blur(2f.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            },
-                            onDrawSurface = {
-                                drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                                drawRect(OffWhite.copy(alpha = 0.5f))
-                            }
-                        ),
+                        .baseGlass(backdrop, drawRect = true),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -220,19 +203,7 @@ fun FaceTopAppBar(
                 Spacer(Modifier.width(12.dp))
                 Box(
                     modifier = Modifier
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { CircleShape },
-                            effects = {
-                                vibrancy()
-                                blur(2f.dp.toPx())
-                                lens(16f.dp.toPx(), 32f.dp.toPx())
-                            },
-                            onDrawSurface = {
-                                drawRect(OffWhite, alpha = 0.4f, blendMode = BlendMode.Overlay)
-                                drawRect(OffWhite.copy(alpha = 0.5f))
-                            }
-                        )
+                        .baseGlass(backdrop, drawRect = true)
                         .size(58.dp)
                         .clickable(
                             onClick = {
@@ -258,19 +229,7 @@ fun FaceTopAppBar(
                     modifier = Modifier
                         .padding(horizontal = 20.dp)
                         .fillMaxWidth()
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { RoundedCornerShape(24.dp) },
-                            effects = {
-                                vibrancy()
-                                blur(8f.dp.toPx())
-                                lens(32.dp.toPx(), 64.dp.toPx())
-                            },
-                            onDrawSurface = {
-                                drawRect(OffWhite, alpha = 0.5f, blendMode = BlendMode.Overlay)
-                                drawRect(OffWhite.copy(alpha = 0.5f))
-                            }
-                        )
+                        .baseGlass(backdrop, drawRect = true)
                         .padding(20.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.Start,
@@ -436,15 +395,7 @@ fun FaceBottomBar(
                         modifier = Modifier
                             .fillMaxHeight()
                             .weight(1f)
-                            .drawBackdrop(
-                                backdrop = backdrop,
-                                shape = { RoundedCornerShape(24.dp) },
-                                effects = {
-                                    vibrancy()
-                                    blur(2f.dp.toPx())
-                                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                                }
-                            )
+                            .baseGlass(backdrop, shape = RoundedCornerShape(24.dp))
                             .padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalArrangement = Arrangement.SpaceBetween,
                         horizontalAlignment = Alignment.Start
@@ -452,23 +403,7 @@ fun FaceBottomBar(
                         Box(
                             modifier = Modifier
                                 .size(50.dp)
-                                .drawBackdrop(
-                                    backdrop = backdrop,
-                                    shape = { CircleShape },
-                                    effects = {
-                                        vibrancy()
-                                        blur(2f.dp.toPx())
-                                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                                    },
-                                    onDrawSurface = {
-                                        drawRect(
-                                            AccountGray,
-                                            alpha = 0.4f,
-                                            blendMode = BlendMode.Overlay
-                                        )
-                                        drawRect(AccountGray.copy(alpha = 0.5f))
-                                    }
-                                ),
+                                .baseGlass(backdrop, drawRect = true),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -496,15 +431,7 @@ fun FaceBottomBar(
                         modifier = Modifier
                             .fillMaxHeight()
                             .weight(1f)
-                            .drawBackdrop(
-                                backdrop = backdrop,
-                                shape = { RoundedCornerShape(24.dp) },
-                                effects = {
-                                    vibrancy()
-                                    blur(2f.dp.toPx())
-                                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                                }
-                            )
+                            .baseGlass(backdrop, shape = RoundedCornerShape(24.dp))
                             .padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalArrangement = Arrangement.SpaceBetween,
                         horizontalAlignment = Alignment.Start
@@ -512,23 +439,7 @@ fun FaceBottomBar(
                         Box(
                             modifier = Modifier
                                 .size(50.dp)
-                                .drawBackdrop(
-                                    backdrop = backdrop,
-                                    shape = { CircleShape },
-                                    effects = {
-                                        vibrancy()
-                                        blur(2f.dp.toPx())
-                                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                                    },
-                                    onDrawSurface = {
-                                        drawRect(
-                                            AccountGray,
-                                            alpha = 0.4f,
-                                            blendMode = BlendMode.Overlay
-                                        )
-                                        drawRect(AccountGray.copy(alpha = 0.5f))
-                                    }
-                                ),
+                                .baseGlass(backdrop, drawRect = true),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -557,15 +468,7 @@ fun FaceBottomBar(
                         modifier = Modifier
                             .fillMaxHeight()
                             .weight(1f)
-                            .drawBackdrop(
-                                backdrop = backdrop,
-                                shape = { RoundedCornerShape(24.dp) },
-                                effects = {
-                                    vibrancy()
-                                    blur(2f.dp.toPx())
-                                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                                }
-                            )
+                            .baseGlass(backdrop, shape = RoundedCornerShape(24.dp))
                             .padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalArrangement = Arrangement.SpaceBetween,
                         horizontalAlignment = Alignment.Start
@@ -573,23 +476,7 @@ fun FaceBottomBar(
                         Box(
                             modifier = Modifier
                                 .size(50.dp)
-                                .drawBackdrop(
-                                    backdrop = backdrop,
-                                    shape = { CircleShape },
-                                    effects = {
-                                        vibrancy()
-                                        blur(2f.dp.toPx())
-                                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                                    },
-                                    onDrawSurface = {
-                                        drawRect(
-                                            AccountGray,
-                                            alpha = 0.4f,
-                                            blendMode = BlendMode.Overlay
-                                        )
-                                        drawRect(AccountGray.copy(alpha = 0.5f))
-                                    }
-                                ),
+                                .baseGlass(backdrop, drawRect = true),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -626,15 +513,7 @@ fun FaceBottomBar(
                 ) {
                     Box(
                         modifier = Modifier
-                            .drawBackdrop(
-                                backdrop = backdrop,
-                                shape = { CircleShape },
-                                effects = {
-                                    vibrancy()
-                                    blur(2f.dp.toPx())
-                                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                                }
-                            )
+                            .baseGlass(backdrop)
                             .size(58.dp)
                             .clickable(
                                 onClick = {
