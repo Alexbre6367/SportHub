@@ -49,7 +49,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -63,8 +62,7 @@ import androidx.navigation.NavController
 import com.example.sporthub.ui.components.baseGlass
 import com.example.sporthub.ui.components.chat.EmptyStateGemini
 import com.example.sporthub.ui.components.chat.MessageBox
-import com.example.sporthub.ui.theme.LightBlue
-import com.example.sporthub.ui.theme.OffWhite
+import com.example.sporthub.ui.theme.backgroundGradient
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.GeminiViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
@@ -95,11 +93,7 @@ fun GeminiScreen(
         modifier = modifier
             .fillMaxSize()
             .imePadding()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(LightBlue, OffWhite), startY = 0f, endY = 1500f
-                )
-            )
+            .background(backgroundGradient)
             .clickable(
                 onClick = {
                     focusManager.clearFocus()
@@ -278,7 +272,7 @@ fun GeminiBar(
                             color = gray,
                             textAlign = TextAlign.Start
                         ),
-                        maxLines = 5,
+                        singleLine = true,
                         cursorBrush = SolidColor(gray),
                         decorationBox = { innerTextField ->
                             Row(

@@ -12,11 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -35,16 +34,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.sporthub.ui.components.BottomBarContinue
-import com.example.sporthub.ui.theme.LightBlue
-import com.example.sporthub.ui.theme.OffWhite
+import com.example.sporthub.ui.components.mainColumn
 import com.example.sporthub.ui.theme.appleBlue
 import com.example.sporthub.ui.theme.appleOrange
 import com.example.sporthub.ui.theme.applePink
@@ -61,6 +62,8 @@ import com.example.sporthub.ui.viewmodel.LoginViewModel
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import kotlinx.coroutines.delay
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
@@ -69,7 +72,8 @@ fun SignUpEmailScreen(
     navController: NavHostController,
     emailState: MutableState<String>,
     errorLogin: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    focusRequester: FocusRequester
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -90,24 +94,10 @@ fun SignUpEmailScreen(
 
     Column(
         modifier = modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(LightBlue, OffWhite),
-                    startY = 0f,
-                    endY = 1500f
-                )
-            )
-            .verticalScroll(scrollState)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                focusManager.clearFocus()
-            }
-            .statusBarsPadding()
-            .padding(horizontal = 20.dp)
-            .padding(top = 70.dp),
+            .mainColumn(
+                scrollState,
+                onClick = { focusManager.clearFocus() }
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -160,7 +150,9 @@ fun SignUpEmailScreen(
                     unfocusedIndicatorColor = if(errorLogin) colorError else gray,
                     cursorColor = gray
                 ),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
             )
         }
 
@@ -283,21 +275,28 @@ fun SignUpEmailBottomBar(
     navController: NavHostController,
 ) {
     val emailState = remember { mutableStateOf("") }
+    val authState by loginViewModel.authState.collectAsState()
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+
+    val isLoading = authState is AuthState.Loading
     var errorLogin by remember { mutableStateOf(false) }
-    if(errorLogin) {
-        LaunchedEffect(Unit) {
-            delay(5000.milliseconds)
-            errorLogin = false
 
+
+    DisposableEffect(Unit) {
+        onDispose {
+            errorLogin = false
         }
     }
 
-    var isLoading by remember { mutableStateOf(false) }
-    if(isLoading) {
-        LaunchedEffect(Unit) {
+    LaunchedEffect(errorLogin) {
+        if(errorLogin) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
             delay(5000.milliseconds)
-            isLoading = false
+            errorLogin = false
         }
     }
 
@@ -311,23 +310,32 @@ fun SignUpEmailBottomBar(
             navController,
             emailState,
             errorLogin,
-            modifier = Modifier.layerBackdrop(backdrop)
+            modifier = Modifier.layerBackdrop(backdrop),
+            focusRequester
         )
 
         BottomBarContinue(
             backdrop,
             navController = navController,
             onClick = {
-                if (emailState.value.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(
-                        emailState.value.trim()
-                    ).matches()
-                ) {
-                    isLoading = true
-                    val encodedEmail = java.net.URLEncoder.encode(
-                        emailState.value,
-                        java.nio.charset.StandardCharsets.UTF_8.toString()
+                errorLogin = false
+                if (emailState.value.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(emailState.value.trim()).matches()) {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+
+                    loginViewModel.checkEmail(
+                        email = emailState.value,
+                        onSuccess = {
+                            val encodedEmail = URLEncoder.encode(
+                                emailState.value.trim(),
+                                StandardCharsets.UTF_8.toString()
+                            )
+                            navController.navigate("sign_up_password_screen/$encodedEmail")
+                        },
+                        onError = {
+                            errorLogin = true
+                        }
                     )
-                    navController.navigate("sign_up_password_screen/$encodedEmail")
                 } else {
                     errorLogin = true
                 }

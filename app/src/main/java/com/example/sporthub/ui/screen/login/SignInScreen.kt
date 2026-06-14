@@ -11,11 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -29,6 +27,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -39,9 +38,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -49,8 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.sporthub.ui.components.BottomBarContinue
-import com.example.sporthub.ui.theme.LightBlue
-import com.example.sporthub.ui.theme.OffWhite
+import com.example.sporthub.ui.components.mainColumn
 import com.example.sporthub.ui.theme.appleBlue
 import com.example.sporthub.ui.theme.appleOrange
 import com.example.sporthub.ui.theme.applePink
@@ -76,7 +77,8 @@ fun SignInScreen(
     emailState: MutableState<String>,
     passwordState: MutableState<String>,
     errorLogin: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    focusRequester: FocusRequester
 ) {
 
     var passwordVisibility by remember { mutableStateOf(false) }
@@ -92,24 +94,10 @@ fun SignInScreen(
 
     Column(
         modifier = modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(LightBlue, OffWhite),
-                    startY = 0f,
-                    endY = 1500f
-                )
-            )
-            .verticalScroll(scrollState)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                focusManager.clearFocus()
-            }
-            .statusBarsPadding()
-            .padding(horizontal = 20.dp)
-            .padding(top = 70.dp),
+            .mainColumn(
+                scrollState,
+                onClick = { focusManager.clearFocus() }
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -162,7 +150,9 @@ fun SignInScreen(
                     unfocusedIndicatorColor = if(errorLogin) colorError else gray,
                     cursorColor = gray
                 ),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
             )
 
             Spacer(Modifier.height(16.dp))
@@ -344,6 +334,24 @@ fun SignInBottomBar(
     val authState by loginViewModel.authState.collectAsState()
     val isLoading = authState is AuthState.Loading
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    var errorLogin by remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            errorLogin = false
+        }
+    }
+
+    LaunchedEffect(errorLogin) {
+        if(errorLogin) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
+
     LaunchedEffect(authState) {
         if(authState == AuthState.Success) {
             navController.navigate(loginViewModel.getStartScreen()) {
@@ -352,7 +360,6 @@ fun SignInBottomBar(
         }
     }
 
-    var errorLogin by remember { mutableStateOf(false) }
     LaunchedEffect(authState) {
         if(authState == AuthState.Error) {
             errorLogin = true
@@ -372,14 +379,18 @@ fun SignInBottomBar(
             emailState,
             passwordState,
             errorLogin = errorLogin,
-            modifier = Modifier.layerBackdrop(backdrop)
+            modifier = Modifier.layerBackdrop(backdrop),
+            focusRequester
         )
 
         BottomBarContinue(
             backdrop,
             navController = navController,
             onClick = {
+                errorLogin = false
                 if (emailState.value.isNotEmpty() && passwordState.value.isNotEmpty()) {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
                     loginViewModel.signIn(emailState.value, passwordState.value)
                 }
             },

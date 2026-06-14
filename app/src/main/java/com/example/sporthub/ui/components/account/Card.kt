@@ -227,7 +227,6 @@ fun Card(
                         enabled = !isResetPassword,
                         onClick = {
                             loginViewModel.resetPassword(
-                                context,
                                 onSuccess = {
                                     emailState.value = auth.currentUser?.email ?: ""
                                     onResend()

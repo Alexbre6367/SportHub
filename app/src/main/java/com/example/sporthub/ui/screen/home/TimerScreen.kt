@@ -26,11 +26,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -52,22 +50,19 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.toRect
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.sporthub.ui.components.baseGlass
-import com.example.sporthub.ui.theme.LightBlue
+import com.example.sporthub.ui.components.mainColumn
 import com.example.sporthub.ui.theme.LightGray
-import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.theme.ringColor
@@ -93,23 +88,16 @@ fun TimerScreen(
     var selectedMinutes by remember { mutableIntStateOf(0) }
     var selectedSeconds by remember { mutableIntStateOf(0) }
 
-    val context = LocalContext.current
-
     if (secondsLeft <= 0L) {
         selectedTime = 0
     }
 
     Column(
         modifier = modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(LightBlue, OffWhite), startY = 0f, endY = 1500f
-                )
-            )
-            .verticalScroll(scrollState)
-            .padding(horizontal = 20.dp)
-            .statusBarsPadding(),
+            .mainColumn(
+                scrollState,
+                paddingTop = false
+            ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(70.dp))
@@ -118,7 +106,7 @@ fun TimerScreen(
             totalSeconds = totalSeconds,
             modifier = Modifier.baseGlass(rememberLayerBackdrop(), shape = RoundedCornerShape(72.dp)),
             onPauseClick = {
-                timerViewModel.resetTimer(context)
+                timerViewModel.resetTimer()
             }
         )
         Spacer(Modifier.height(30.dp))
@@ -170,7 +158,6 @@ fun TimerScreen(
                             }
                         } else {
                             timerViewModel.startTimer(
-                                context,
                                 selectedMinutes.toLong() * 60 + selectedSeconds
                             )
                         }
@@ -212,7 +199,7 @@ fun TimerScreen(
                 modifier = Modifier
                     .clickable(
                         onClick = {
-                            timerViewModel.startTimer(context, 60)
+                            timerViewModel.startTimer(60)
                             selectedTime = 60
                         },
                         indication = null,
@@ -244,7 +231,7 @@ fun TimerScreen(
                 modifier = Modifier
                     .clickable(
                         onClick = {
-                            timerViewModel.startTimer(context, 120)
+                            timerViewModel.startTimer(120)
                             selectedTime = 120
                         },
                         indication = null,
@@ -276,7 +263,7 @@ fun TimerScreen(
                 modifier = Modifier
                     .clickable(
                         onClick = {
-                            timerViewModel.startTimer(context, 300)
+                            timerViewModel.startTimer(300)
                             selectedTime = 300
                         },
                         indication = null,

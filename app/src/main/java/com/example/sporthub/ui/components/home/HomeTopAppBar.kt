@@ -181,7 +181,7 @@ fun HomeTopAppBar(
 
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "${(userData?.strike)?.plus(1)}",
+                    text = "${(userData?.strike)?.plus(1) ?: 0}",
                     color = black,
                     fontSize = 14.sp,
                     style = MaterialTheme.typography.titleLarge

@@ -2,7 +2,6 @@ package com.example.sporthub.ui.viewmodel
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.content.Context
 import android.hardware.camera2.CaptureRequest
 import android.util.Log
 import androidx.annotation.OptIn
@@ -77,15 +76,16 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
 
     var imageCapture: ImageCapture? = null
 
+    private val context = getApplication<Application>()
+
     @OptIn(ExperimentalCamera2Interop::class)
     fun bindToCamera(
         lifecycleOwner: LifecycleOwner,
         surfaceProvider: Preview.SurfaceProvider
     ) {
         viewModelScope.launch {
-            val context = getApplication<Application>().applicationContext
             try {
-                cameraProvider = ProcessCameraProvider.getInstance(context).await()
+                cameraProvider = ProcessCameraProvider.getInstance(context.applicationContext).await()
 
                 val cameraSelector = if(_frontCamera.value) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
                 val cameraInfo = cameraProvider?.getCameraInfo(cameraSelector)
@@ -149,7 +149,7 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
                     .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                     .build()
 
-                val poseAnalysis = poseAnalysis(context)
+                val poseAnalysis = poseAnalysis()
 
                 cameraProvider?.unbindAll()
 
@@ -171,7 +171,7 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
         cameraProvider?.unbindAll()
     }
 
-    private fun poseAnalysis(context: Context): ImageAnalysis { //подготовка для передачи
+    private fun poseAnalysis(): ImageAnalysis { //подготовка для передачи
         return ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
@@ -251,10 +251,9 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
 
     fun loadPoseClassifier() {
         viewModelScope.launch(Dispatchers.IO) {
-            val context = getApplication<Application>().applicationContext
             val poseSample = mutableListOf<PoseSample>()
             try {
-                context.assets.open("fitness_pose_samples.csv").bufferedReader().useLines { lines ->
+                context.applicationContext.assets.open("fitness_pose_samples.csv").bufferedReader().useLines { lines ->
                     lines.forEach { line ->
                         if(line.isNotBlank()) {
                             val sample = PoseSample.getPoseSample(line, ",")

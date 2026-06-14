@@ -40,7 +40,8 @@ fun BottomBarContinue(
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
     enable: Boolean = !isLoading,
-    text: String = "Continue"
+    text: String = "Continue",
+    onBack: () -> Unit = { navController.popBackStack() }
 ) {
     Row(
         modifier = modifier
@@ -55,9 +56,7 @@ fun BottomBarContinue(
                 .size(58.dp)
                 .baseGlass(backdrop)
                 .clickable(
-                    onClick = {
-                        navController.popBackStack()
-                    },
+                    onClick = onBack,
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
                 ),

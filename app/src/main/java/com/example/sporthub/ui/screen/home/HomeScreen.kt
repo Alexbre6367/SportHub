@@ -6,21 +6,15 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -33,8 +27,7 @@ import com.example.sporthub.ui.components.home.HealthStats
 import com.example.sporthub.ui.components.home.HomeTopAppBar
 import com.example.sporthub.ui.components.home.WaterTarget
 import com.example.sporthub.ui.components.home.Widget
-import com.example.sporthub.ui.theme.LightBlue
-import com.example.sporthub.ui.theme.OffWhite
+import com.example.sporthub.ui.components.mainColumn
 import com.example.sporthub.ui.viewmodel.FaceViewModel
 import com.example.sporthub.ui.viewmodel.HomeViewModel
 import com.example.sporthub.ui.viewmodel.LoginViewModel
@@ -95,16 +88,7 @@ fun HomeScreen(
     val scrollState = rememberScrollState()
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(LightBlue, OffWhite), startY = 0f, endY = 1500f
-                )
-            )
-            .verticalScroll(scrollState)
-            .padding(horizontal = 20.dp)
-            .statusBarsPadding()
+        modifier = modifier.mainColumn(scrollState, paddingTop = false)
     ) {
         HomeTopAppBar(
             navController,

@@ -118,7 +118,6 @@ fun WorkoutTopAppBar(
     navController: NavController,
     loginViewModel: LoginViewModel
 ) {
-
     val currentDate = remember {
         val formatter = SimpleDateFormat("d MMMM", Locale.ENGLISH)
         formatter.format(Date())

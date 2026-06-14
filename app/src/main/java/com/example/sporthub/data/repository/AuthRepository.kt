@@ -12,6 +12,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.util.Calendar
 
+@Suppress("DEPRECATION")
 class AuthRepository(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
@@ -66,6 +67,15 @@ class AuthRepository(
         }
     }
 
+    suspend fun checkEmail(email: String): Boolean {
+        return try {
+            auth.fetchSignInMethodsForEmail(email).await().signInMethods?.isNotEmpty() == true
+        } catch (e: Exception) {
+            Log.e("MyLog", "Ошибка проверки почты", e)
+            false
+        }
+    }
+
     suspend fun signInGoogle(idToken: String): User? {
         return try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
@@ -97,9 +107,12 @@ class AuthRepository(
     private suspend fun performDeleteAccount(credential: AuthCredential): Boolean {
         return try {
             val user = auth.currentUser ?: return false
+
             user.reauthenticate(credential).await()
-            sportHubRepository.deleteUser(user.uid)
+            firestore.collection("users").document(user.uid).delete().await()
             user.delete().await()
+
+            sportHubRepository.deleteUser(user.uid)
             secureStorage.clearUserId()
             true
         } catch (e: Exception) {

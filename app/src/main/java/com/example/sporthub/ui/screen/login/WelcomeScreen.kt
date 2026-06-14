@@ -5,7 +5,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -29,9 +28,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.sporthub.ui.components.mainColumn
 import com.example.sporthub.ui.theme.LightBlue
 import com.example.sporthub.ui.theme.LightPurple
-import com.example.sporthub.ui.theme.OffWhite
 import com.example.sporthub.ui.theme.black
 
 @Composable
@@ -39,18 +38,7 @@ fun WelcomeScreen(
     navController: NavHostController
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(LightBlue, OffWhite),
-                    startY = 0f,
-                    endY = 1500f
-                )
-            )
-            .padding(bottom = 12.dp)
-            .navigationBarsPadding()
-            .padding(horizontal = 20.dp),
+        modifier = Modifier.mainColumn().navigationBarsPadding().padding(bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(Modifier.weight(1f))

@@ -85,8 +85,8 @@ fun InputGlass(
         initialSelectedDateMillis = userData?.birthdate?.takeIf { it != 0L }
     )
 
-    val startWeight = userData?.weight ?: 70
-    val startHeight = userData?.height ?: 180
+    val startWeight = userData?.weight?.takeIf { it > 0 } ?: 70
+    val startHeight = userData?.height?.takeIf { it > 0 } ?: 180
 
     val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
         timeInMillis = if((userData?.birthdate ?: 0L) != 0L) userData!!.birthdate else 946684800000L
@@ -143,9 +143,6 @@ fun InputGlass(
             datePickerState = datePickerState,
             birthdateState = birthdateState,
             openDialog = { age = true },
-            onWeightChange = { weightState = it },
-            onHeightChange = { heightState = it },
-            onAgeChange = { birthdateState = it },
             modifier = Modifier.layerBackdrop(backdrop)
         )
 

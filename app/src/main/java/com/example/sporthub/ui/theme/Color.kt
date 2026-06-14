@@ -1,5 +1,6 @@
 package com.example.sporthub.ui.theme
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 val Purple80 = Color(0xFFD0BCFF)
@@ -41,3 +42,7 @@ val activityBlueEnd = Color(114, 236, 218, 255)
 val colorError = Color(209, 46, 36)
 
 val ringColor = Color(191, 236, 32)
+
+val backgroundGradient = Brush.verticalGradient(
+    colors = listOf(LightBlue, OffWhite), startY = 0f, endY = 1500f
+)

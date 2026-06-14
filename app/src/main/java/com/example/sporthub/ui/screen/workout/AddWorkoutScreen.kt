@@ -19,20 +19,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteOutline
@@ -51,7 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
@@ -65,9 +60,9 @@ import androidx.navigation.NavController
 import com.example.sporthub.data.sporthub.ExerciseEntity
 import com.example.sporthub.data.sporthub.WorkoutEntity
 import com.example.sporthub.data.sporthub.WorkoutWithExercises
+import com.example.sporthub.ui.components.BottomBarContinue
 import com.example.sporthub.ui.components.baseGlass
-import com.example.sporthub.ui.theme.LightBlue
-import com.example.sporthub.ui.theme.OffWhite
+import com.example.sporthub.ui.components.mainColumn
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.colorError
 import com.example.sporthub.ui.theme.gray
@@ -104,24 +99,15 @@ fun AddWorkoutScreen(
 
     Column(
         modifier = modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(LightBlue, OffWhite), startY = 0f, endY = 1500f
-                )
-            )
-            .clickable (
+            .mainColumn(
+                scrollState,
                 onClick = {
                     focusManager.clearFocus()
                     keyboardController?.hide()
                 },
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
+                paddingTop = false
             )
             .imePadding()
-            .verticalScroll(scrollState)
-            .padding(horizontal = 20.dp)
-            .statusBarsPadding()
     ) {
         Spacer(Modifier.height(86.dp))
         exercises.forEachIndexed { index, exercise ->
@@ -299,82 +285,39 @@ fun AddWorkoutBar(
             }
         }
 
-        Row(
-            modifier = Modifier
-                .navigationBarsPadding()
-                .imePadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-                .height(58.dp)
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .baseGlass(backdrop)
-                    .size(58.dp)
-                    .clickable(
-                        onClick = {
-                            if (isKeyboard) {
-                                keyboardController?.hide()
-                            } else {
-                                navController.navigate("home_screen/1")
-                            }
-                        },
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBackIosNew,
-                    contentDescription = null,
-                    tint = gray,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
 
-            Spacer(Modifier.width(12.dp))
-            Box(
-                modifier = Modifier
-                    .height(58.dp)
-                    .weight(1f)
-                    .clickable(
-                        onClick = {
-                            if (nameWorkout.isNotBlank() && exercises.isNotEmpty() && exercises.all { it.body.isNotBlank() }) {
-                                workoutViewModel.addWorkoutWithExercise(
-                                    WorkoutEntity(
-                                        workoutId = workoutEdit?.workout?.workoutId ?: 0,
-                                        name = nameWorkout
-                                    ),
-                                    exercises,
-                                )
-                                navController.navigate("home_screen/1")
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    "Fill in all fields",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        },
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
+        BottomBarContinue(
+            backdrop,
+            navController = navController,
+            onClick = {
+                if (nameWorkout.isNotBlank() && exercises.isNotEmpty() && exercises.all { it.body.isNotBlank() }) {
+                    keyboardController?.hide()
+                    workoutViewModel.addWorkoutWithExercise(
+                        WorkoutEntity(
+                            workoutId = workoutEdit?.workout?.workoutId ?: 0,
+                            name = nameWorkout
+                        ),
+                        exercises,
                     )
-                    .background(
-                        color = black,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Save",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 18.sp
-                )
+                    navController.navigate("home_screen/1")
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Fill in all fields",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            },
+            modifier = Modifier.align(Alignment.BottomCenter),
+            text = "Save",
+            onBack = {
+                if (isKeyboard) {
+                    keyboardController?.hide()
+                } else {
+                    navController.navigate("home_screen/1")
+                }
             }
-        }
+        )
     }
 }
 

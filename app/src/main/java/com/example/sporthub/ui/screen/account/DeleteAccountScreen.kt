@@ -1,31 +1,18 @@
 package com.example.sporthub.ui.screen.account
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -51,9 +37,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.sporthub.ui.components.baseGlass
-import com.example.sporthub.ui.theme.LightBlue
-import com.example.sporthub.ui.theme.OffWhite
+import com.example.sporthub.ui.components.BottomBarContinue
+import com.example.sporthub.ui.components.mainColumn
 import com.example.sporthub.ui.theme.black
 import com.example.sporthub.ui.theme.gray
 import com.example.sporthub.ui.viewmodel.LoginViewModel
@@ -73,24 +58,10 @@ fun DeleteAccountScreen(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(LightBlue, OffWhite),
-                    startY = 0f,
-                    endY = 1500f
-                )
-            )
-            .verticalScroll(scrollState)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                focusManager.clearFocus()
-            }
-            .statusBarsPadding()
-            .padding(horizontal = 28.dp)
-            .padding(top = 70.dp),
+            .mainColumn(
+                scrollState,
+                onClick = { focusManager.clearFocus() }
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -179,111 +150,52 @@ fun DeleteAccountBottomBar(
             passwordState
         )
 
-        Row(
-            modifier = Modifier
-                .navigationBarsPadding()
-                .imePadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .baseGlass(backdrop)
-                    .size(58.dp)
-                    .clickable(
-                        onClick = {
-                            navController.popBackStack()
-                        },
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBackIosNew,
-                    contentDescription = null,
-                    tint = gray,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .padding(start = 12.dp)
-                    .height(58.dp)
-                    .weight(1f)
-                    .clickable(
-                        enabled = !isDelete,
-                        onClick = {
-                            if (passwordState.value.isNotEmpty()) {
-                                if(loginViewModel.isGoogleAccount.value) {
-                                    if(passwordState.value == "DELETE") {
-                                        loginViewModel.deleteAccount(
-                                            password = null,
-                                            onSuccess = {
-                                                navController.navigate("welcome_screen") {
-                                                    popUpTo(0)
-                                                }
-                                            },
-                                            onError = {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Invalid value or network error",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-                                        )
+        BottomBarContinue(
+            backdrop,
+            navController = navController,
+            onClick = {
+                if (passwordState.value.isNotEmpty()) {
+                    if(loginViewModel.isGoogleAccount.value) {
+                        if(passwordState.value == "DELETE") {
+                            loginViewModel.deleteAccount(
+                                password = null,
+                                onSuccess = {
+                                    passwordState.value = ""
+                                    navController.navigate("welcome_screen") {
+                                        popUpTo(0)
                                     }
-                                } else {
-                                    loginViewModel.deleteAccount(
-                                        password = passwordState.value,
-                                        onSuccess = {
-                                            navController.navigate("welcome_screen") {
-                                                popUpTo(0)
-                                            }
-                                        },
-                                        onError = {
-                                            Toast.makeText(
-                                                context,
-                                                "Invalid value or network error",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    )
+                                },
+                                onError = {
+                                    passwordState.value = ""
+                                    Toast.makeText(
+                                        context,
+                                        "Invalid value or network error",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
-                            }
-                        },
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    )
-                    .background(
-                        color = black,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                AnimatedContent(
-                    targetState = isDelete,
-                    label = "loading_animation",
-                ) { targetIsDelete ->
-                    if (targetIsDelete) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
+                            )
+                        }
                     } else {
-                        Text(
-                            text = "Delete",
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontSize = 18.sp
+                        loginViewModel.deleteAccount(
+                            password = passwordState.value,
+                            onSuccess = {
+                                navController.navigate("welcome_screen") {
+                                    popUpTo(0)
+                                }
+                            },
+                            onError = {
+                                Toast.makeText(
+                                    context,
+                                    "Invalid value or network error",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         )
                     }
                 }
-            }
-        }
+            },
+            modifier = Modifier.align(Alignment.BottomCenter),
+            isLoading = isDelete
+        )
     }
 }

@@ -1,22 +1,24 @@
 package com.example.sporthub.ui.viewmodel
 
-import android.content.Context
+import android.app.Application
 import android.content.Intent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import com.example.sporthub.data.timer.TimerManager
 import com.example.sporthub.data.timer.TimerService
 import com.example.sporthub.data.timer.TimerService.Companion.ACTION_STOP_SERVICE
 
-class TimerViewModel: ViewModel() {
+class TimerViewModel(application: Application) : AndroidViewModel(application) {
     val timerLeft = TimerManager.timeLeft
     val totalSeconds = TimerManager.totalSeconds
 
     var isPaused by mutableStateOf(false)
 
-    fun startTimer(context: Context, duration: Long) {
+    private val context = getApplication<Application>()
+
+    fun startTimer(duration: Long) {
         isPaused = false
         TimerManager.startTimer(duration)
 
@@ -35,7 +37,7 @@ class TimerViewModel: ViewModel() {
         TimerManager.stopTimer()
     }
 
-    fun resetTimer(context: Context) {
+    fun resetTimer() {
         isPaused = false
         TimerManager.resetTimer()
 

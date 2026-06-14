@@ -223,13 +223,13 @@ fun CameraScreen(
                             onClick = {
                                 if (secondsLeft > 0 || workout) {
                                     timerJob?.cancel()
-                                    timerViewModel.resetTimer(context)
+                                    timerViewModel.resetTimer()
                                     onWorkoutChange(false)
                                     onEndChange(true)
                                     cameraViewModel.stop()
                                 } else {
                                     onEndChange(false)
-                                    timerViewModel.startTimer(context, 10)
+                                    timerViewModel.startTimer(10)
                                     timerJob = scope.launch {
                                         delay(10.seconds)
                                         onWorkoutChange(true)

@@ -1,7 +1,6 @@
 package com.example.sporthub.ui.viewmodel
 
 import android.app.Application
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
@@ -58,6 +57,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
     private val _isGoogleAccount = MutableStateFlow(false)
     val isGoogleAccount = _isGoogleAccount.asStateFlow()
 
+    private val context = getApplication<Application>()
 
     init {
         loadUserData()
@@ -147,6 +147,20 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
         }
     }
 
+    fun checkEmail(email: String, onSuccess: () -> Unit, onError: () -> Unit) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            val exists = authRepository.checkEmail(email)
+            if(exists) {
+                _authState.value = AuthState.Error
+                onError()
+            } else {
+                _authState.value = AuthState.Idle
+                onSuccess()
+            }
+        }
+    }
+
     fun levelUser(level: Int) {
         viewModelScope.launch {
             val uid = secureStorage.getUserId() ?: return@launch
@@ -232,7 +246,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
 
     private fun saveImageToInternalStorage(uri: Uri): String? {
         return try {
-            val context = getApplication<Application>()
             val fileName = "profile_image_${System.currentTimeMillis()}.jpg"
             val file = File(context.filesDir, fileName)
 
@@ -252,7 +265,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
         }
     }
 
-    fun imageUri(uri: Uri, context: Context) {
+    fun imageUri(uri: Uri) {
         viewModelScope.launch {
             try {
                 val uid = secureStorage.getUserId() ?: return@launch
@@ -281,7 +294,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
 
     private fun deleteOldImage(fileName: String) {
         try {
-            val context = getApplication<Application>()
             val file = File(context.filesDir, fileName)
             if (file.exists()) {
                 file.delete()
@@ -319,35 +331,40 @@ class LoginViewModel(application: Application) : AndroidViewModel(application){
 
     fun deleteAccount(password: String?, onSuccess: () -> Unit, onError: () -> Unit) {
         viewModelScope.launch {
-            _isDelete.value = true
-            _authState.value = AuthState.Loading
+            try {
+                _isDelete.value = true
+                _authState.value = AuthState.Loading
 
-            val isDelete = if (password != null) {
-                authRepository.deleteAccountEmail(password)
-            } else {
-                val idToken = googleAuth.getGoogleIdToken()
-                if (idToken != null) {
-                    authRepository.deleteAccountGoogle(idToken)
+                val isDelete = if (password != null) {
+                    authRepository.deleteAccountEmail(password)
                 } else {
-                    false
+                    val idToken = googleAuth.getGoogleIdToken()
+                    if (idToken != null) {
+                        authRepository.deleteAccountGoogle(idToken)
+                    } else {
+                        false
+                    }
                 }
-            }
 
-            if(isDelete) {
-                _currentUser.value = null
-                _authState.value = AuthState.Idle
-                onSuccess()
-                Log.d("MyLog", "Пользователь удален")
-            } else {
-                _authState.value = AuthState.Error
-                onError()
+                if (isDelete) {
+                    _currentUser.value?.uri?.let { file ->
+                        deleteOldImage(file)
+                    }
+                    _currentUser.value = null
+                    _authState.value = AuthState.Idle
+                    onSuccess()
+                    Log.d("MyLog", "Пользователь удален")
+                } else {
+                    _authState.value = AuthState.Error
+                    onError()
+                }
+            } finally {
+                _isDelete.value = false
             }
-
-            _isDelete.value = false
         }
     }
 
-    fun resetPassword(context: Context, email: String? = null, onSuccess: () -> Unit) {
+    fun resetPassword(email: String? = null, onSuccess: () -> Unit) {
         val targetEmail = if(!email.isNullOrBlank()) {
             email
         } else {
