@@ -23,7 +23,7 @@ fun PoseDetector(
         val scaleX = size.width / imageWidth
         val scaleY = size.height / imageHeight
 
-        fun drawLine(startType: Int, endType: Int) {
+        fun drawSkeleton(startType: Int, endType: Int) {
             val start = pose.getPoseLandmark(startType)
             val end = pose.getPoseLandmark(endType)
             if(start != null && end != null && start.inFrameLikelihood > 0.8f && end.inFrameLikelihood > 0.5f) {
@@ -36,21 +36,21 @@ fun PoseDetector(
             }
         }
 
-        drawLine(PoseLandmark.LEFT_SHOULDER, PoseLandmark.RIGHT_SHOULDER)
-        drawLine(PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_HIP)
-        drawLine(PoseLandmark.RIGHT_HIP, PoseLandmark.LEFT_HIP)
-        drawLine(PoseLandmark.LEFT_HIP, PoseLandmark.LEFT_SHOULDER)
-        drawLine(PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_ELBOW)
-        drawLine(PoseLandmark.LEFT_ELBOW, PoseLandmark.LEFT_WRIST)
-        drawLine(PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_ELBOW)
-        drawLine(PoseLandmark.RIGHT_ELBOW, PoseLandmark.RIGHT_WRIST)
-        drawLine(PoseLandmark.LEFT_HIP, PoseLandmark.LEFT_KNEE)
-        drawLine(PoseLandmark.LEFT_KNEE, PoseLandmark.LEFT_ANKLE)
-        drawLine(PoseLandmark.RIGHT_HIP, PoseLandmark.RIGHT_KNEE)
-        drawLine(PoseLandmark.RIGHT_KNEE, PoseLandmark.RIGHT_ANKLE)
-        drawLine(PoseLandmark.LEFT_SHOULDER, PoseLandmark.RIGHT_SHOULDER)
+        drawSkeleton(PoseLandmark.LEFT_SHOULDER, PoseLandmark.RIGHT_SHOULDER)
+        drawSkeleton(PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_HIP)
+        drawSkeleton(PoseLandmark.RIGHT_HIP, PoseLandmark.LEFT_HIP)
+        drawSkeleton(PoseLandmark.LEFT_HIP, PoseLandmark.LEFT_SHOULDER)
+        drawSkeleton(PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_ELBOW)
+        drawSkeleton(PoseLandmark.LEFT_ELBOW, PoseLandmark.LEFT_WRIST)
+        drawSkeleton(PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_ELBOW)
+        drawSkeleton(PoseLandmark.RIGHT_ELBOW, PoseLandmark.RIGHT_WRIST)
+        drawSkeleton(PoseLandmark.LEFT_HIP, PoseLandmark.LEFT_KNEE)
+        drawSkeleton(PoseLandmark.LEFT_KNEE, PoseLandmark.LEFT_ANKLE)
+        drawSkeleton(PoseLandmark.RIGHT_HIP, PoseLandmark.RIGHT_KNEE)
+        drawSkeleton(PoseLandmark.RIGHT_KNEE, PoseLandmark.RIGHT_ANKLE)
+        drawSkeleton(PoseLandmark.LEFT_SHOULDER, PoseLandmark.RIGHT_SHOULDER)
 
-        fun drawJoint(type: Int) {
+        fun drawFace(type: Int) {
             val landmark = pose.getPoseLandmark(type)
             if(landmark != null && landmark.inFrameLikelihood > 0.8f) {
                 drawCircle(
@@ -61,18 +61,18 @@ fun PoseDetector(
             }
         }
 
-        drawJoint(PoseLandmark.NOSE)
-        drawJoint(PoseLandmark.LEFT_SHOULDER)
-        drawJoint(PoseLandmark.RIGHT_SHOULDER)
-        drawJoint(PoseLandmark.LEFT_ELBOW)
-        drawJoint(PoseLandmark.RIGHT_ELBOW)
-        drawJoint(PoseLandmark.LEFT_WRIST)
-        drawJoint(PoseLandmark.RIGHT_WRIST)
-        drawJoint(PoseLandmark.LEFT_HIP)
-        drawJoint(PoseLandmark.RIGHT_HIP)
-        drawJoint(PoseLandmark.LEFT_KNEE)
-        drawJoint(PoseLandmark.RIGHT_KNEE)
-        drawJoint(PoseLandmark.LEFT_ANKLE)
-        drawJoint(PoseLandmark.RIGHT_ANKLE)
+        drawFace(PoseLandmark.NOSE)
+        drawFace(PoseLandmark.LEFT_SHOULDER)
+        drawFace(PoseLandmark.RIGHT_SHOULDER)
+        drawFace(PoseLandmark.LEFT_ELBOW)
+        drawFace(PoseLandmark.RIGHT_ELBOW)
+        drawFace(PoseLandmark.LEFT_WRIST)
+        drawFace(PoseLandmark.RIGHT_WRIST)
+        drawFace(PoseLandmark.LEFT_HIP)
+        drawFace(PoseLandmark.RIGHT_HIP)
+        drawFace(PoseLandmark.LEFT_KNEE)
+        drawFace(PoseLandmark.RIGHT_KNEE)
+        drawFace(PoseLandmark.LEFT_ANKLE)
+        drawFace(PoseLandmark.RIGHT_ANKLE)
     }
 }
