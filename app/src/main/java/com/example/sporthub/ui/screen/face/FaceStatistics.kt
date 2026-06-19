@@ -218,7 +218,7 @@ fun FaceTopAppBar(
                     modifier = Modifier
                         .padding(horizontal = 20.dp)
                         .fillMaxWidth()
-                        .baseGlass(backdrop, drawRect = true)
+                        .baseGlass(backdrop, shape = RoundedCornerShape(24.dp), drawRect = true)
                         .padding(20.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.Start,

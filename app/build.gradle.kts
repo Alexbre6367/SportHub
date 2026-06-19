@@ -10,14 +10,14 @@ plugins {
 
 android {
     namespace = "com.example.sporthub"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.example.sporthub"
         minSdk = 29
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
-        versionName = "1.0.4"
+        versionName = "1.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -88,31 +88,31 @@ dependencies {
     implementation("androidx.camera:camera-mlkit-vision:${camerax_version}")
     implementation("androidx.camera:camera-extensions:${camerax_version}")
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
-    implementation("androidx.concurrent:concurrent-futures-ktx:1.2.0")
+    implementation("androidx.concurrent:concurrent-futures-ktx:1.3.0")
 
     implementation("androidx.health.connect:connect-client:1.1.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.room:room-runtime:2.8.4")
     implementation("androidx.room:room-ktx:2.8.4")
-    implementation("androidx.compose.runtime:runtime-livedata:1.10.5")
+    implementation("androidx.compose.runtime:runtime-livedata:1.11.3")
     ksp("androidx.room:room-compiler:2.8.4")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("androidx.security:security-crypto:1.1.0")
     implementation("androidx.biometric:biometric-ktx:1.4.0-alpha02")
 
-    implementation("androidx.credentials:credentials:1.3.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("androidx.credentials:credentials:1.6.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.2.0")
     implementation("com.google.firebase:firebase-ai")
-    implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
+    implementation(platform("com.google.firebase:firebase-bom:34.15.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation(libs.firebase.crashlytics.buildtools)
 
-    implementation("androidx.navigation:navigation-compose:2.8.9")
+    implementation("androidx.navigation:navigation-compose:2.9.8")
 
     implementation(files("libs/KetchumSDK_Community_20250805.jar"))
     implementation("com.github.zj565061763:compose-wheel-picker:1.0.0-beta02")
