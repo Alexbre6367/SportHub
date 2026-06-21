@@ -233,7 +233,7 @@ fun SignUpPasswordBottomBar(
                 if(passwordState.value.isNotBlank()) {
                     keyboardController?.hide()
                     focusManager.clearFocus()
-                    loginViewModel.signUp(email, passwordState.value)
+                    loginViewModel.signUp(email, passwordState.value.trim())
                 }
             },
             modifier = Modifier.align(Alignment.BottomCenter),

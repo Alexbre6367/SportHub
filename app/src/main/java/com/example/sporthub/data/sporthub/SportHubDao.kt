@@ -58,6 +58,12 @@ interface WorkoutDao {
 
     @Query("DELETE FROM exercise_table WHERE exerciseId = :id")
     suspend fun deleteExercise(id: Int)
+
+    @Query("DELETE FROM workout_table")
+    suspend fun deleteAllWorkouts()
+
+    @Query("DELETE FROM exercise_table")
+    suspend fun deleteAllExercises()
 }
 
 @Dao
@@ -70,4 +76,7 @@ interface FaceDao {
 
     @Query("UPDATE face_table SET widget = :widget WHERE id = 1")
     suspend fun updateWidget(widget: Boolean)
+
+    @Query("DELETE FROM face_table")
+    suspend fun deleteFace()
 }

@@ -112,7 +112,7 @@ class AuthRepository(
             firestore.collection("users").document(user.uid).delete().await()
             user.delete().await()
 
-            sportHubRepository.deleteUser(user.uid)
+            sportHubRepository.deleteAll(user.uid)
             secureStorage.clearUserId()
             true
         } catch (e: Exception) {

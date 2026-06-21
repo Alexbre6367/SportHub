@@ -13,9 +13,7 @@ import com.example.sporthub.data.sporthub.User
 import com.example.sporthub.data.sporthub.WorkoutDao
 import com.example.sporthub.data.sporthub.WorkoutEntity
 import com.example.sporthub.data.sporthub.WorkoutWithExercises
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.tasks.await
 
 class SportHubRepository(
     private val sportHubDao: SportHubDao,
@@ -43,20 +41,6 @@ class SportHubRepository(
 
     suspend fun updateUser(user: User) {
         sportHubDao.updateUser(user)
-    }
-
-    suspend fun deleteUser(userId: String) {
-        sportHubDao.deleteUser(userId)
-        try {
-            FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(userId)
-                .delete()
-                .await()
-            Log.d("MyLog", "Пользователь успешно удален из Firestore")
-        } catch (e: Exception) {
-            Log.e("MyLog", "Ошибка при удалении пользователя", e)
-        }
     }
 
     fun getUserForWeek(startWeek: Long, endWeek: Long): Flow<List<User>> {
@@ -120,5 +104,18 @@ class SportHubRepository(
 
     suspend fun updateWidget(widget: Boolean) {
         faceDao.updateWidget(widget)
+    }
+
+    suspend fun deleteAll(userId: String) {
+        try {
+            sportHubDao.deleteUser(userId)
+            healthDao.deleteAllHealthData()
+            workoutDao.deleteAllWorkouts()
+            workoutDao.deleteAllExercises()
+            faceDao.deleteFace()
+            Log.d("MyLog", "Пользователь успешно удален")
+        } catch (e: Exception) {
+            Log.e("MyLog", "Ошибка при удалении пользователя", e)
+        }
     }
 }

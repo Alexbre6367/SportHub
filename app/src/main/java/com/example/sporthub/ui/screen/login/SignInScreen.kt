@@ -391,7 +391,7 @@ fun SignInBottomBar(
                 if (emailState.value.isNotEmpty() && passwordState.value.isNotEmpty()) {
                     keyboardController?.hide()
                     focusManager.clearFocus()
-                    loginViewModel.signIn(emailState.value, passwordState.value)
+                    loginViewModel.signIn(emailState.value.trim(), passwordState.value)
                 }
             },
             modifier = Modifier.align(Alignment.BottomCenter),
