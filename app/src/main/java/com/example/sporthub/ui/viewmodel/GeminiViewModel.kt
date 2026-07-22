@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sporthub.data.auth.SecureStorage
 import com.example.sporthub.data.repository.SportHubRepository
+import com.example.sporthub.data.sporthub.FaceEntity
 import com.example.sporthub.data.sporthub.SportHubDatabase
 import com.example.sporthub.llm.Gemini
 import com.google.firebase.ai.type.Content
@@ -53,7 +54,12 @@ class GeminiViewModel(application: Application) : AndroidViewModel(application) 
 
                 val healthData = repository.getHealthForToday(dateId).first() ?: return@launch
 
-                val faceData = repository.getFaceData.first() ?: return@launch
+                val faceData = repository.getFaceData.first() ?: FaceEntity(
+                    sensitive = 0f,
+                    acne = 0,
+                    dryness = 0,
+                    moisture = 0
+                )
 
                 val aiResponse = if(bitmap != null) {
                     Gemini.analyzePhoto(
